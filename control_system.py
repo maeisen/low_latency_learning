@@ -174,9 +174,14 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
         channel_state_mat = np.reshape(channel_state,(N,self.num_users,self.num_rus,10))
         control_state_mat = np.reshape(channel_state,(N,self.num_users,p))
 
+        channel_state_col = snr_to_col(channel_state_mat)
+
         time_per_user_per_ru = np.zeros((N,self.num_users,self.num_rus))
         for i in self.num_users:
+            p_min = control_state_mat[:,i,:].T * (self.Ao.T * self.Ao - self.rho) * control_state_mat[:,i,:]
+            p_min = p_min / (control_state_mat[:,i,:].T * (self.Ao.T * self.Ao - self.Ac.T * self.Ac) * control_state_mat[:,i,:])
             for j in self.num_rus:
+                pdr_per_ru = 1 - per_by_snr[:,channel_state_col]
                 time_per_user_per_ru[:,i,j] = 
 
         return time_per_user_per_ru 
