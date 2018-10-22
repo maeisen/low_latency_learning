@@ -27,7 +27,7 @@ class ProbabilisticSystem(object):
 
 class WirelessSchedulingSystem(ProbabilisticSystem):
     def __init__(self, num_users, p=1, Ao=None, Ac=None, W=None, rho = .95, mu=2, S=1, num_rus = 24,num_channels=9):
-        super().__init__(num_users*num_rus + num_users*p, num_users*num_channels + num_users, num_users+S*num_channels)
+        super().__init__(num_users*num_rus + num_users*p, num_users*num_channels, S*num_channels)
 
         self.channel_state_dim = num_users*num_rus
         self.control_state_dim = num_users*p
@@ -119,12 +119,11 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
         # total_cap = np.reshape(total_cap, (-1, 1))
         # return total_cap
 
-        mcs = action[:,0:self.mcs_dim]
-        rus = action[:,self.mcs_dim:]
-
-        
-
+        #mcs = action[:,0:self.mcs_dim]
+        #rus = action[:,self.mcs_dim:]
+        rus = action
         N = action.shape[0]
+        
         
         packet_size = self.packet_size
         bw_per_user = np.sum(np.reshape(rus,(N,self.num_users,self.num_channels)),axis=2)
@@ -134,7 +133,7 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
             if bw_per_user[i]>0:
                 time_per_user[:,i] = 8*packet_size*0.000001/(self.rate_by_mcs[mcs[:,i]-1]*bw_per_user[:,i])   
         
-        total_time = np.sum(time_per_user,axis=1)
+        total_time = np.max(time_per_user,axis=1)
         return total_time
 
     def get_binary(self, action):
@@ -217,8 +216,10 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
             TYPE: N by constrain_dim matrix of power budget violations
         """
 
-        mcs = action[:,0:self.mcs_dim]
-        rus = action[:,self.mcs_dim:]
+       # mcs = action[:,0:self.mcs_dim]
+       # rus = action[:,self.mcs_dim:]
+        rus = action
+
         ru_mat = np.reshape(rus,(N,self.num_users,self.num_channels))
         N = np.size(state,0)
 
@@ -226,10 +227,10 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
         lhs[:,0:self.num_channels] = np.array([np.sum(ru_mat, axis=2) - np.ones(N,self.num_channels)])
 
 
-        channel_state = state[:,0:self.channel_state_dim]
-        control_state = state[:,self.channel_state_dim:]
-        state_mat = np.reshape(channel_state,(N,self.num_users,self.num_rus,10))
-        for i in np.arange(self.num_users):
-            lhs[:,self.num_channels+1] = 
+        # channel_state = state[:,0:self.channel_state_dim]
+        # control_state = state[:,self.channel_state_dim:]
+        # state_mat = np.reshape(channel_state,(N,self.num_users,self.num_rus,10))
+        # for i in np.arange(self.num_users):
+        #     lhs[:,self.num_channels+1] = 
 
         return lhs
