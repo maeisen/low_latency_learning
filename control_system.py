@@ -26,15 +26,18 @@ class ProbabilisticSystem(object):
 
 
 class WirelessSchedulingSystem(ProbabilisticSystem):
-    def __init__(self, num_users, p, Ao=None, Ac=None, W=None, mu=2, S=1, num_rus = 24,num_channels=9):
-        super().__init__(num_users*num_rus*10 + num_users*p, num_users*num_channels + num_users, num_users+S*num_channels)
+    def __init__(self, num_users, p=1, Ao=None, Ac=None, W=None, rho = .95, mu=2, S=1, num_rus = 24,num_channels=9):
+        super().__init__(num_users*num_rus + num_users*p, num_users*num_channels + num_users, num_users+S*num_channels)
 
-        self.channel_state_dim = num_users*num_rus*10
+        self.channel_state_dim = num_users*num_rus
         self.control_state_dim = num_users*p
         self.ru_dim = num_users*num_channels
         self.mcs_dim = num_users
 
+        self.packet_size = 100
+
         self.p = p
+        self.rho = rho
 
         self.pmax = 1
         self.mu = mu
@@ -45,6 +48,7 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
 
 
         self.rate_by_mcs = [1.6,2.4,3.3,4.9,6.5,7.3,8.1,9.8,10.8,12.2,13.5]
+        self.bw_by_ru = [1,1,1,1,1,1,1,1,1,2,2,2,2,2,2,2,2,4,4,4,4,4,4,10]
 
         T = scipy.io.loadmat('snr_info.mat')
         self.per_by_snr = T.get('mcs_snr_per_wcl_20B')
@@ -73,17 +77,26 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
     def sample(self, batch_size):
         return self._exponential_sample(batch_size)
 
-    def snr_to_col(self,snr_value):
+    def db_to_col(self,snr_value):
         snr_value = np.minimum(snr_value,35)
         snr_value = np.maximum(snr_value,-35)
 
         col = np.floor((snr_value+35)/0.1+1)-1
-        return col
+        return col.astype(int)
 
     def packet_delivery_rate(self,snr_value,mcs,per_by_snr):
         col = self.snr_to_col(snr_value)
         pdr = 1 - per_by_snr[mcs-1,col]
         return pdr
+
+    def snr_to_db(tx_power,noise_snr):
+        db = 10*np.log10(tx_power/noise_snr)
+        return db
+
+    def mcs_to_time(self,mcs,packet_size):
+        time = 8*packet_size*0.000001/(self.rate_by_mcs[mcs]*np.tile(self.bw_by_ru,(mcs.shape[0],1)))
+        return time
+
 
     def f0(self, state, action):
         """
@@ -113,7 +126,7 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
 
         N = action.shape[0]
         
-        packet_size = 100
+        packet_size = self.packet_size
         bw_per_user = np.sum(np.reshape(rus,(N,self.num_users,self.num_channels)),axis=2)
         
         time_per_user = np.zeros((N,self.num_users))
@@ -171,18 +184,20 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
 
         N = np.size(state,0)
 
-        channel_state_mat = np.reshape(channel_state,(N,self.num_users,self.num_rus,10))
+        channel_state_mat = np.reshape(channel_state,(N,self.num_users,self.num_rus))
         control_state_mat = np.reshape(channel_state,(N,self.num_users,p))
 
-        channel_state_col = snr_to_col(channel_state_mat)
+        channel_state_col = self.db_to_col(self.snr_to_db(2,channel_state_mat))
 
         time_per_user_per_ru = np.zeros((N,self.num_users,self.num_rus))
-        for i in self.num_users:
-            p_min = control_state_mat[:,i,:].T * (self.Ao.T * self.Ao - self.rho) * control_state_mat[:,i,:]
-            p_min = p_min / (control_state_mat[:,i,:].T * (self.Ao.T * self.Ao - self.Ac.T * self.Ac) * control_state_mat[:,i,:])
-            for j in self.num_rus:
-                pdr_per_ru = 1 - per_by_snr[:,channel_state_col]
-                time_per_user_per_ru[:,i,j] = 
+
+        pp = 1 - self.per_by_snr[:,channel_state_col]
+        for i in np.arange(self.num_users):
+            #p_min = control_state_mat[:,i,:].T * (self.Ao.T * self.Ao - self.rho) * control_state_mat[:,i,:]
+            #p_min = p_min / (control_state_mat[:,i,:].T * (self.Ao.T * self.Ao - self.Ac.T * self.Ac) * control_state_mat[:,i,:])
+            p_min = (np.power(self.Ao[i],2)-self.rho) / (np.power(self.Ao[i],2) - np.power(self.Ac[i],2))
+            mcs_by_ru = np.maximum(np.sum(pp[:,:,i,:]>=p_min,axis=0),1)-1
+            time_per_user_per_ru[:,i,:] = self.mcs_to_time(mcs_by_ru,self.packet_size)
 
         return time_per_user_per_ru 
 
