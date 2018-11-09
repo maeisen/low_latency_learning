@@ -5,7 +5,6 @@ import scipy
 import scipy.stats
 import graphtools as gt
 import datatools as dt
-from architecture import cnngs
 
 
 
@@ -227,92 +226,6 @@ def mlp_model2(state_dim, action_dim, num_param, layers=[64, 32, 16]):
 
     return state_input, output
 
-def gnn_model(state_dim, action_dim, GSO, S, num_param=1, layers=[5]):
-
-    L = len(layers)
-    archit = 'no_pooling'
-    gnn = cnngs(GSO, S, # Graph parameters
-            layers, [32]*L, [1]*L, [action_dim*num_param], # Architecture
-            'temp', './', archit = 'no_pooling',decay_steps=1)
-
-   # state_input = gnn.ph_data
-   # output = gnn.op_logits
-
-    state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
-
-    x = state_input
-    x = tf.expand_dims(x, 2)  # T x N x F=1
-    T, N, F = x.get_shape()
-    if archit == 'aggregation':
-        maxP = min(S.shape[0],20)
-        x = gt.collect_at_node(x,gnn.S,[gnn.R],maxP)
-    for l in range(L):
-        with tf.variable_scope('gsconv{}'.format(l+1)):
-            if gnn.archit == 'hybrid':
-                # Padding:
-                Tx, Nx, Fx = x.get_shape()
-                Tx, Nx, Fx = int(Tx), int(Nx), int(Fx)
-                if Nx < N:
-                    x = tf.pad(x, [[0,0],[0,int(N-Nx)],[0,0]])
-                # Diffusion:
-                RR = [int(x) for x in range(gnn.R[l])]
-                x = gt.collect_at_node(x,S,RR,gnn.P[l])
-            with tf.name_scope('filter'):
-                Tx, Nx, Fx = x.get_shape()
-                print("LL")
-                print(l)
-                print(Nx)
-                x = gnn.filter(x, l)
-            with tf.name_scope('pooling'):
-                x = gnn.pool(x, l)
-            with tf.name_scope('nonlin'):
-                x = gnn.nonlin(x)
-    T, N, F = x.get_shape()
-    x = tf.reshape(x, [int(T), int(N*F)])  # T x M (Recall M = N*F)
-    for l in range(len(gnn.M)-1):
-        with tf.variable_scope('fc{}'.format(l+1)):
-            x = gnn.fc(x, l)
-            x = tf.nn.dropout(x, dropout)
-    # Logits linear layer, i.e. softmax without normalization.
-    with tf.variable_scope('logits'):
-        x = gnn.fc(x, len(gnn.M)-1, relu=False)
-    output = x
-
-    return state_input, output
-
-def gnn_model_multi(state_dim, action_dim, num_param, num_neurons1=8, num_neurons2=4):
-    def _build_network(input, num_param, scope):
-        with tf.variable_scope(scope):
-            layer1 = tf.contrib.layers.fully_connected(input,
-                num_neurons1,
-                activation_fn=tf.nn.relu,
-                scope='layer1')
-
-
-            layer2 = tf.contrib.layers.fully_connected(layer1,
-                num_neurons2,
-                activation_fn=tf.nn.relu,
-                scope='layer2')
-
-            output = tf.contrib.layers.fully_connected(layer2,
-                num_param,
-                activation_fn=None,
-                scope='output')
-        return output
-
-    state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
-
-    output_list = []
-    for i in range(action_dim):
-        single_input = tf.slice(state_input, [0, i], [-1, 1])
-
-        output = arc._inference(single_input, num_param, "agent" + str(i))
-        output_list.append(output[..., tf.newaxis])
-
-    output_list = tf.concat(output_list, axis=-1)
-    output_list = tf.reshape(output_list, [tf.shape(output)[0], -1])
-
-    return state_input, output_list
 
 def mlp_model_multi(state_dim, action_dim, num_param, num_neurons1=8, num_neurons2=4):
     def _build_network(input, num_param, scope):
@@ -386,9 +299,7 @@ class ReinforcePolicy(object):
         constraint_dim,
         model_builder=mlp_model_multi,
         distribution=None,
-        sess=None,
-        gso = None,
-        shift_op = None):
+        sess=None):
 
         self.state_dim = state_dim
         self.action_dim = action_dim
@@ -398,16 +309,12 @@ class ReinforcePolicy(object):
         self.model_builder = mlp_model
         self.dist = distribution
 
-        self.GSO = gso
-        self.S = shift_op
 
         self.lambd_lr = 0.0005
 
         self.stats = RunningStats(64*100)
-        if model_builder == gnn_model:
-            self._build_model2(state_dim, action_dim, model_builder, distribution)
-        else:
-            self._build_model(state_dim, action_dim, model_builder, distribution)
+
+        self._build_model(state_dim, action_dim, model_builder, distribution)
 
         if sess == None:
             config = tf.ConfigProto(device_count={'GPU': 0})
@@ -437,25 +344,6 @@ class ReinforcePolicy(object):
         lr = 5e-4
         self.optimize = tf.train.AdamOptimizer(lr).minimize(self.loss)
 
-    def _build_model2(self, state_dim, action_dim, model_builder, distribution):
-
-        # self.state_input, self.output, self.selected_action, self.log_probs =\
-        #     model_builder(state_dim, action_dim, self.dist)
-        
-        self.state_input, self.output = model_builder(state_dim, action_dim, self.GSO, self.S, self.dist.num_param)
-
-        self.selected_action = tf.placeholder(tf.float32, [None, action_dim], name='selected_action')
-
-
-        self.log_probs, self.params = self.dist.log_prob(self.output, self.selected_action)
-
-        self.cost = tf.placeholder(tf.float32, [None], name='cost')
-
-        self.loss = self.log_probs * self.cost
-        self.loss = tf.reduce_mean(self.loss)
-
-        lr = 5e-4
-        self.optimize = tf.train.AdamOptimizer(lr).minimize(self.loss)
 
 
     def get_action(self, inputs):
