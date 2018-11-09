@@ -44,10 +44,9 @@ class RunningStats(object):
 
 
 class SchedulingPolicy(object):
-    def __init__(self, state_dim, action_dim, mcs_dim, constraint_dim, sess=None):
+    def __init__(self, state_dim, action_dim, constraint_dim, sess=None):
         self.state_dim = state_dim
         self.action_dim = action_dim
-        self.mcs_dim = mcs_dim
         self.constraint_dim = constraint_dim
         self.lambd = np.ones((constraint_dim, 1))
 
@@ -55,7 +54,7 @@ class SchedulingPolicy(object):
 
         self.stats = RunningStats(64*100)
 
-        self._build_model(state_dim, action_dim,mcs_dim)
+        self._build_model(state_dim, action_dim)
 
         if sess == None:
             self.sess = tf.InteractiveSession()
@@ -64,7 +63,7 @@ class SchedulingPolicy(object):
             self.sess = sess
 
 
-    def _build_model(self, state_dim, action_dim, mcs_dim):
+    def _build_model(self, state_dim, action_dim):
         with tf.variable_scope('policy'):
             self.state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
 
@@ -103,34 +102,32 @@ class SchedulingPolicy(object):
 
             # gamma distribution with fixed shape alpha=2
             self.output = tf.contrib.layers.fully_connected(layer1,
-                action_dim+mcs_dim,
+                action_dim,
                 activation_fn=None,
                 scope='output')
             self.alpha = 2
-            action_rs = self.output[:,0:action_dim].reshape(100,-1,24)
-            mcs_rs = self.output[:,action_dim:]
-            self.beta = tf.nn.softmax(action_rs)
-            self.beta_m = tf.nn.softmax(mcs_rs)
+            #action_rs = self.output[:,0:action_dim].reshape(100,-1,24)
+            self.beta = tf.nn.softmax(self.output)
 
 
             self.selected_action = tf.placeholder(tf.float32, [None, action_dim], name='action')
             self.cost = tf.placeholder(tf.float32, [None], name='cost')
 
 
-            # # gaussian distribution
-            # # TODO: this can create NaNs when self.var is small
-            # self.log_probs = -0.5 * tf.log(2*np.pi*self.var) - tf.square(self.selected_action - self.mean) / (2. * self.var)
-            # self.log_probs = tf.reduce_sum(self.log_probs, axis=1)
-
             # # exponential distribution
             # self.log_probs = tf.log(self.inv_mean) - self.inv_mean * self.selected_action
             # self.log_probs = tf.reduce_sum(self.log_probs, axis=1)
 
             # gamma distribution
-            self.log_probs = self.alpha * tf.log(self.beta) + \
-                (self.alpha - 1) * tf.log(self.selected_action) - \
-                self.beta * self.selected_action - \
-                np.log(scipy.special.gamma(self.alpha))
+            #self.log_probs = self.alpha * tf.log(self.beta) + \
+            #    (self.alpha - 1) * tf.log(self.selected_action) - \
+            #    self.beta * self.selected_action - \
+            #    np.log(scipy.special.gamma(self.alpha))
+            # self.log_probs = tf.reduce_sum(self.log_probs, axis=1)
+
+            # multinomial distribution
+            print(self.beta.shape)
+            self.log_probs = tf.log(self.beta[:,self.selected_action]) 
             self.log_probs = tf.reduce_sum(self.log_probs, axis=1)
 
 
@@ -152,10 +149,10 @@ class SchedulingPolicy(object):
         # inv_mean = self.sess.run(self.inv_mean, feed_dict=fd)
         # action = np.random.exponential(inv_mean)
 
-        # gamma distribution
+        # multinomial distribution
         beta = self.sess.run(self.beta, feed_dict=fd)
         action = np.random.multinomial(1,self.beta)
-
+        
 
         return action
 
