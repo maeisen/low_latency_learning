@@ -5,8 +5,8 @@ import scipy.io
 from scipy import sparse
 
 from control_system import *
-from scheduling_policy import SchedulingPolicy
-from scheduling_policy import *
+from reinforce_policy import ReinforcePolicy
+from reinforce_policy import *
 import networkx as nwx
 import graphtools as gt
 
@@ -97,11 +97,11 @@ def wireless_control_test():
     mu = 2 # parameter for exponential distribution of wireless channel distribution
     num_users = 9 # number of wireless channels (action_dim and state_dim)
 
-    cap_min = .2
     sys = WirelessSchedulingSystem(num_users)
-    scheduling_policy = SchedulingPolicy(sys.state_dim, 
+    distribution = ClassificationDistribution(sys.action_dim)
+    scheduling_policy = ReinforcePolicy(sys.state_dim, 
         sys.action_dim, 
-        sys.constraint_dim)
+        sys.constraint_dim,model_builder=mlp_model, distribution=distribution)
     policies = {'reinforce': scheduling_policy}
 
     history_dict = run_sys(sys, policies, 5000)[0]
