@@ -143,6 +143,7 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
 
         action_a = np.asarray(action)
         active_users = np.where(action_a>=0)
+        action = action.astype(int)
        # packet_size = self.packet_size
        # bw_per_user = np.sum(np.reshape(rus,(N,self.num_users,self.num_channels)),axis=2)
         
@@ -160,18 +161,16 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
         #all_times_array = all_times_array[1:]
         
         total_time = np.max(all_times_array,axis=1)
-        return total_time
+        return np.reshape(total_time,(-1,1))
 
     def get_binary(self, action):
 
         a2 = action.tolist()
-        print(a2)
         f = np.zeros(shape=(len(a2),self.action_dim,9))
         index = 1
         for i in np.arange(0,len(a2)):
             x = np.asarray(a2[i]).astype(int)
             condlist = [np.equal(x,0),np.equal(x,1),np.equal(x,2),np.equal(x,3),np.equal(x,4),np.equal(x,5),np.equal(x,6),np.equal(x,7),np.equal(x,8),np.equal(x,9),np.equal(x,10),np.equal(x,11),np.equal(x,12),np.equal(x,13),np.equal(x,14),np.equal(x,15),np.equal(x,16),np.equal(x,17),np.equal(x,18),np.equal(x,19),np.equal(x,20),np.equal(x,21),np.equal(x,22),np.equal(x,23),np.equal(x,24)]
-           # print(condlist)
             choiselst = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0],
             [1, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 1, 0, 0, 0, 0, 0, 0, 0],
@@ -199,7 +198,6 @@ class WirelessSchedulingSystem(ProbabilisticSystem):
             [1, 1, 1, 1, 1, 1, 1, 1, 1]])
             #f[i] = np.select(condlist,hoiselst)
             f[i,:,:] = choiselst[x]
-        print(f)
         return f
 
     def get_time(self,state):
