@@ -155,25 +155,41 @@ class ClassificationDistribution(ProbabilityAction):
 
     def log_prob(self, params, selected_action):
         log_probs = 0
+        output_list = []
+        output = tf.zeros((tf.shape(params)[0],1))
+        #print(params)
         for i in np.arange(self.action_dim):
             ru_class = tf.gather(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
-            ru_class_sig = tf.nn.sigmoid(ru_class)
+            ru_class_sig = 1 / (1 + tf.math.exp(-ru_class))
             log_probs = log_probs + tf.reduce_sum(tf.log(ru_class_sig)*(selected_action[i]==i),axis=1)
-
-        output = None
-
+            output = tf.concat([output, ru_class_sig],axis=1)
+            #output_list.append(ru_class_sig)
+        #print(tf.stack(output_list).shape)
+        #output = tf.concat(ru_class_sig,axis=1)
+        #output = tf.concat([mean, std], axis=1)
         # TODO: this can create NaNs when self.var is small
         #log_probs = -0.5 * tf.log(2*np.pi*var) - tf.square(selected_action - mean) / (2. * var)
         #log_probs = tf.reduce_sum(log_probs, axis=1)
 
-        return log_probs, output
+        #return log_probs, tf.stack(output_list)
+        return log_probs, output[:,1:]
 
     def get_action(self, params):
+        output_list = []
+        N = np.shape(params)[0]
 
+        action = np.zeros((N,self.action_dim))
         for i in np.arange(self.action_dim):
-            ru_class = tf.gather(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
-            ru_class_sig = tf.nn.sigmoid(ru_class)
-            action[:,i] = np.random.multinomial(1,ru_class_sig)
+            ru_class = np.take(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
+            ru_class_sig = 1 / (1 + np.exp(-ru_class))
+            #print(ru_class_sig.shape)
+            #print(ru_class_sig[1,:])
+            #print(np.where(np.random.multinomial(1,ru_class_sig[1,:]/np.sum(ru_class_sig[1,:])))[0][0])
+            for j in np.arange(N):
+                action[j,i] = np.where(np.random.multinomial(1,ru_class_sig[1,:]/np.sum(ru_class_sig[1,:])))[0][0]
+
+            
+        #action = np.stack(output_list)
 
 
 
@@ -365,10 +381,8 @@ class ReinforcePolicy(object):
         Returns:
             TYPE: Description
         """
-
         cost = f0 + np.dot(f1, self.lambd)
         cost = np.reshape(cost, (-1))
-
         self.stats.push_list(cost)
         cost_minus_baseline = cost - self.stats.get_mean()
 
