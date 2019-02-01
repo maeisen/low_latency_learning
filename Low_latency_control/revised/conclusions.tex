@@ -1,0 +1,22 @@
+In this paper we proposed a novel control-communication co-design approach to solving the radio resource
+allocation problem for time-sensitive wireless control systems. Given a channel state and control state, we mathematically derive a minimum packet delivery
+rate a device must meet to maintain a control-orientated target,
+as defined by a stability-inducing Lyapunov function. By
+dynamically assigning variable packet delivery rate targets
+to each device based on its current conditions, we are able to
+more easily meet feasibility requirements of a latency-constrained
+wireless control problem and maintain stability
+and strong performance. We perform simulations on numerous
+well-studied low-latency control problems to demonstrate the
+benefits of using the control-aware approach, which can include
+a 2x gain on number of devices that can be supported.
+
+The results presented in this paper suggest an interesting
+potential for control-aware resource allocation and scheduling, particularly in low-latency industrial systems. By considering the control-specific targets such as maintaining
+stability or an error margin, we observe that the standard
+high reliability targets considered (e.g. packet delivery rates $\geq 0.999$) can in some cases be substantially stricter than
+necessary for adequate performance. Wireless control systems
+with sufficiently slow dynamics can be kept stable with much
+lower packet delivery rates, which in turn make low-latency
+communications more achievable. Furthermore, in realistic industrial systems there will be many heterogeneous devices being controlled, whose variation in communication needs is well-served by control-aware opportunism proposed in this paper. This suggests the potential for wireless communications to be adopted using a smart control-communication co-design approach even
+while ultra-reliable wireless system technology remains under development.

@@ -1,0 +1,202 @@
+We develop a control-aware low-latency scheduling (CALLS) algorithm to approximately solve the control-constrained scheduling formulation in \eqref{eq_problem2}-\eqref{eq_c42}. Because this problem is combinatorial in nature, it is infeasible to solve exactly. Instead, we focus on a practical and efficient means of solving approximately. In particular, we identify sets of feasible points and use a heuristic approach towards minimizing the transmission time objective among the set of feasible points. Additionally, within the development of the CALLS method we identify and characterize new PDR requirements that are defined relative to the control system requirements; these are generally significantly less strict than the PDR requirements often considered in general high reliability communication systems without codesign. Overall, the CALLS method consists of (i) the derivation of dynamic control-based PDR targets, (ii) a principled random selection of devices to schedule to reduce latency, and (iii) the use of assignment based methods to find a low-latency schedule. We discuss these three components in detail in the proceeding subsections. 
+
+\subsection{Control-based dynamic PDR}\label{sec_psr}
+Due to the complexity of the scheduling problem in \eqref{eq_problem2}-\eqref{eq_c42}, we first focus our attention on identifying scheduling parameters $\{\bbSigma_k, \bbmu_k, \bbalpha_k\}$ that are feasible, i.e. satisfy the constraints in \eqref{eq_c12}-\eqref{eq_c42}. In particular, the Lyapunov control constraint in \eqref{eq_c22} is of significant interest. Recall that the control cost function $J_i(\hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i)$ is itself determined by the PDR $q(\bbh_{i,k},\mu_i,\bbsigma_i)$, as per \eqref{eq_lyap_p}. Thus, the constraint in \eqref{eq_c22} can be seen as indirectly placing a constraint on the required PDR necessary to achieve a $\rho_i$-rate decrease in expectation. The equivalent condition on PDR $q(\bbh_{i,k},\mu_i,\bbsigma_i)$ is presented in the following proposition.
+
+%%%%%%%%%%%%%%%%%%%
+\begin{proposition}\label{prop_pdr_constraint}
+Consider the Lyapunov control constraint in \eqref{eq_c22} and the definition of $J_i(\hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i)$ given in \eqref{eq_lyap_p}.  Define the closed-loop state transition matrix $\bbA^c_i := \bbA_i + \bbB_i \bbK_i$ and $j$-accumulated noise $\omega_i^j := \Tr[(\bbA_i^T\bbP^{1/j} \bbA_i)^{j} \bbW_i]$. The control constraint in \eqref{eq_c22} is satisfied for device $i$ if and only if the following condition on PDR $q(\bbh_{i,k},\mu_i,\bbsigma_i)$ holds, 
+%
+\begin{align}\label{eq_pdr_constraint}
+&q(\bbh_{i,k},\mu_i,\bbsigma_i) \geq \tdq_i(\hbx^{(l_i)}_{i,k}) :=  \\ &\ \frac{1}{\Delta_i} \left[  \left\| (\bbA^c_i - \rho_i\bbI)\hbx^{(l_i)}_{i,k} \right\|_{\bbP^{\frac{1}{2}}}^2+ (1-\rho_i)\sum_{j=0}^{l_i-1} \omega_i^j + \omega_i^{l_i} - c_i  \right],  \nonumber
+\end{align}
+%
+where we have further defined the constant
+%
+\begin{equation}\label{eq_noise_diff}
+\Delta_i :=  \sum_{j=0}^{l_i-1}[\omega^{j+1}_i - \Tr(\bbA^{cT}_i (\bbA_i^T\bbP^{1/j}\bbA_i)^j \bbA^c_i\bbW_i)  ].
+\end{equation}
+\end{proposition}
+%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%
+%%%% P R O O F %%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%
+\begin{myproof}
+ Consider the Lyapunov decrease constraint as written in \eqref{eq_c22}. As the same logic holds for all $i$ and $k$, for ease of presentation we remove all subscripts when presenting the details of this proof. We further introduce the simpler notation $q := q(\bbh,\mu,\bbsigma)$. Now, we may expand the left hand side of \eqref{eq_c22} be rewriting the definition in \eqref{eq_lyap_p} as
+%
+\begin{align}
+J(\hbx^{(l)},\bbh,\mu,\bbsigma)  &= q \E_{\bbw}[ L(\bbA_c \bbx + \bbw)] \label{eq_p1}\\
+&\quad + (1-q)  \E_{\bbw} [L(\bbA \bbx + \bbB\bbK\hbx + \bbw)]. \nonumber 
+\end{align}
+%
+Recall the definition of the quadratic Lyapunov function $L(\bbx) := \bbx^T \bbP \bbx$ for some positive definite $\bbP$. Further recall the relation $\bbx = \hbx + \bbe$ as described by \eqref{eq_diff}. Combining these, we expand the right hand size of \eqref{eq_p1} as
+%
+\begin{align}
+&J(\hbx^{(l)},\bbh,\mu,\bbsigma) = \label{eq_p2}\\
+&\quad q \E_{\bbw} \left[ \bbA_c  \left(\hbx +\bbe \right) + \bbw \right]^T \bbP \left[ \bbA_c  \left(\hbx +\bbe \right) + \bbw \right]  \nonumber\\
+&\ +  (1-q) \E_{\bbw} \left[ \bbA_c \hbx + \bbA\bbe +  \bbw \right]^T \bbP \left[ \bbA_c \hbx +\bbA\bbe +  \bbw\right]. \nonumber
+\end{align}
+%
+To evaluate the expectations in \eqref{eq_p2}, recall the random noise $\bbw$ follows a Gaussian distribution with zero mean and covariance $\bbW$. Thus, the expectation can be evaluated over $\bbw$ and expanded as
+%
+\begin{align}
+&J(\hbx^{(l)},\bbh,\mu,\bbsigma)= \\
+&q \left[  \| \bbA_c \hbx\|^2_{\bbP^{\frac{1}{2}}} + \Tr(\bbP\bbW) + \sum_{j=0}^{l-1} \Tr( \bbA_c (\bbA^T\bbP^{\frac{1}{j}} \bbA)^j \bbA_c \bbW)\right] +  \nonumber\\
+&   (1-q)\left[   \| \bbA_c \hbx\|^2_{\bbP^{\frac{1}{2}}} + \Tr(\bbP \bbW) + \sum_{j=1}^{l} \Tr((\bbA^T\bbP^{\frac{1}{j}} \bbA)^{j}\bbW) \right].\nonumber
+\end{align}
+%
+From here, we rearrange terms and substitute the notation $\omega^j := \Tr[(\bbA^T\bbP^{1/j}\bbA)^{j} \bbW]$ to obtain that the control cost can be written as
+%
+\begin{align}
+J(\hbx^{(l)},\bbh,\mu,\bbsigma)&=\left[  \| \bbA_c \hbx\|^2_{\bbP^{\frac{1}{2}}}+ \Tr(\bbP \bbW) + \sum_{j=1}^{l}\omega^{j} \right]  \label{eq_p4} \\
+&\ + q  \sum_{j=0}^{l-1}[ \Tr( \bbA_c (\bbA^T\bbP^{\frac{1}{j}}\bbA)^j \bbA_c \bbW) - \omega^{j+1}]. \nonumber
+\end{align}
+%
+With \eqref{eq_p4}, we have expanded the control cost in terms of the PDR $q$. Now, we return to the constraint in \eqref{eq_c22}. Recall the expansion for $\E [L(\bbx) \mid \hbx^{(l)}]$ via \eqref{eq_perf}. By combining this with the expansion in \eqref{eq_p4}, the terms in\eqref{eq_c22} can be rearranged to obtain the inequality in \eqref{eq_pdr_constraint}.
+\end{myproof}
+%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%
+%%%% %%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%
+
+In Proposition \ref{prop_pdr_constraint} we establish a lower bound $\tdq_i(\hbx^{(l_i)}_{i,k})$ on the PDR of device $i$ that is dependent upon the current estimated state $\hbx^{(l_i)}_{i,k}$ and system dynamics determined by $\bbA^c_i, \bbA_i$, and $\bbW^i$. We may note the following intuitions about the constraint in \eqref{eq_pdr_constraint}. The PDR condition naturally grows stricter as the bound $\tdq_i(\hbx^{(l_i)}_{i,k})$ defined on the right hand side of \eqref{eq_pdr_constraint} gets larger. The first term on the right hand side reflects the current estimated channel state, and will become larger as the state gets larger. Similarly, the latter two terms on the right hand side together reflect the size of the noise that has accumulated by operating in open loop. When the noise variance $\bbW_i$ is high and when the last-update counter $l_i$ is large, these latter two noise terms will both be large. Thus, both the current magnitude of the control state and the growing uncertainty from infrequent transmissions together determine how large is the PDR requirement in \eqref{eq_pdr_constraint}.
+
+
+We stress the value of the PDR condition in \eqref{eq_pdr_constraint} is both in its adaptability to the control system state and dynamics, as well as its identification of precise target delivery rates that are necessary to keep the control systems moving towards stability on average. Depending on the particular system dynamics as described in \eqref{eq_control_orig}, such PDR's may be, and often are considerably more lenient than the default target transmission success rates used in practical wireless systems (e.g. $q = 0.999$). Thus, through \eqref{eq_pdr_constraint} we make a claim that, with knowledge of the control system dynamics and targeted \emph{control performance}, we can effectively soften the targeted \emph{communication performance}---or ``reliability''--- accordingly to something more easily obtained in low-latency constrained systems. 
+
+\begin{remark}\normalfont
+It is worthwhile to note that by placing a stricter Lyapunov decrease constraint with smaller  rate $\rho_i$ in \eqref{eq_c22}, then the first term on the right hand side of \eqref{eq_pdr_constraint} also grows larger and increases the necessary PDR. Generally, selecting a smaller $\rho$ will result in a faster convergence to stability but will require stricter communication requirements. In fact, we may use the inherent bound on the probability $q(\bbh_{i,k},\mu_i,\bbsigma_i) \leq 1$ to find a lower bound on the Lyapunov decrease rate $\rho_i$ that can be feasibly obtained based upon current control state and system dynamics. This bound, however, may not be obtainable in practice due to the scheduling constraints. In practice, we select $\rho_i$ to be in the interval $[0.90,0.1)$. 
+\end{remark}
+
+\subsection{Selective scheduling}\label{sec_rss}
+We now proceed to describe the procedure with which we can find a set of feasible scheduling decisions $\{\bbSigma_k, \bbmu_k, \bbalpha_k\}$. To begin, we first consider a stochastically \emph{selective scheduling} protocol, whereby we do not attempt to schedule every device at each transmission cycle, but instead select a subset to schedule a principled random manner. Define by $\nu_{i,k} \in [0,1]$ the probability that device $i$ is included in the transmission schedule at time $k$ and further recall by $q(\bbh_{i,k},\mu_i,\bbsigma_i)$ to be the packet delivery rate with which it transmits. Then, we may consider the \emph{effective} packet delivery rate $\hat{q}$ as 
+%
+\begin{align}\label{eq_effective_pdr}
+\hat{q}(\bbh_{i,k},\mu_i,\bbsigma_i) = \nu_{i,k} q(\bbh_{i,k},\mu_i,\bbsigma_i)
+\end{align}
+%
+Selective scheduling is motivated by the ultimate goal of minimizing total transmit time as described in the objective in \eqref{eq_problem2}. As we consider a large number of total devices $m$, scheduling all such devices will require a larger number of PPDU slots---a maximum of 9 devices can transmit within a single PPDU. Recall in \eqref{eq_time_slot} that each additional PPDU requires unavoidable overhead in $\tau_0$, which in aggregation over multiple PPDUs may become a significant bottleneck in minimizing $\hat{\tau}$ or meeting a strict latency requirement $\tau_{max}$. Thus, by decreasing the amount of scheduled devices, we may decrease the number of total PPDUs and the overhead that is added to the total transmission time. 
+
+Observe that by introducing the term $\nu_i$ to the evaluation of effective PDR $\tdq_i$ in \eqref{eq_effective_pdr}, we would thus need to transmit with higher PDR $q(\bbh_{i,k},\mu_i,\bbsigma_i) \geq \tdq_i(\hbx^{(l_i)}_{i,k})/\nu_{i,k}$ to meet the condition in \eqref{eq_pdr_constraint}. While imposing a tighter PDR requirement will indeed require longer transmission times, this added time cost is generally less than the transmission overhead of additional PPDUs. In this work, we use the determine scheduling probability of device $i$ through its PDR requirement $\tdq_i(\hbx^{(l_i)}_{i,k})$ as 
+%
+\begin{align}\label{eq_prob_c}
+\nu_{i,k} := e^{\tdq_i(\hbx^{(l_i)}_{i,k})-1} .
+\end{align}
+%
+
+With \eqref{eq_prob_c}, the probability of scheduling device $i$ increases as the required PDR increases. Notice that, when a transmission is required, i.e. $\tdq_i(\hbx^{(l_i)}_{i,k}) = 1$, then device $i$ is included in the scheduling with probability $1$. In general, devices with very high PDR requirements, e.g. $>0.99$, will be scheduled with very high probability. Thus, the transmission time gains that are provided through selective scheduling using \eqref{eq_prob_c} would be minimal, if non-existent, in high-reliability settings in which PDR requirements remain high at all times. However, with the lower PDR requirement obtained through the control-aware scheduling in \eqref{eq_pdr_constraint}, selective scheduling as the potential to create significant time savings, as will be later shown in Section \ref{sec_simulation} of this paper.
+
+
+
+\subsection{Assignment-based scheduling}\label{sec_assignment}
+
+%We now proceed to discuss how the PDR requirements previously derived are used to schedule the devices during a TXOP. Rather than employing a greedy method as is commonly done in wireless scheduling problems, in the proposed method we use assignment-type methods. To begin, we must determine a set of schedules that satisfy the constraints in \eqref{eq_c12}-\eqref{eq_c42}. Consider that device $i$ is selected to be scheduled at cycle $k$ with probability $\nu_{i,k}$ and define the set of devices to be scheduled as $\ccalI_k \subseteq \{1,2,\hdots,m\}$ with size $| \ccalI_k|$. To specify the sets of RUs that we consider in our scheduling, we first define some notation necessary in the description. We first define $\hat{\ccalS} \subset \ccalS$ to be an arbitrary set of RUs that do not intersect over any frequency bands (i.e. satisfy the constraint in \eqref{eq_c12}). We further define $\hat{\ccalS}^s_n$ to be such a set with size $|\hat{\ccalS}_n| = n$ for PPDU slot $s$, with elements labeled as $\bbsigma_1^s,\hdots,\bbsigma_n^s$. For example, the set $\hat{\ccalS}^s_9$ includes 9 RUs, each containing a single different frequency band of 2MHz. Conversely, the set $\hat{\ccalS}^s_2$ will contain two non-intersecting RU's of size 8MHz. In general, the number of RU and PPDU combinations of size $|\ccalI_k|$ is very large and combinatorial in nature, thus making it infeasible to identify all such combinations. For the reasons mentioned above regarding overhead, in our algorithm we first keep $S_k$, i.e. the number of PPDUs in scheduling cycle $k$, small. We set $S_k = \lceil |\ccalI_k / 9| \rceil$, where the first $S_k - 1$ PPDUs slot 9 devices in the RUs in $\hat{\ccalS}_9$, with the remaining devices slotted into the $S_k$th PPDU allocate the RUs in $\hat{\ccalS}_{(|\ccalI_k| \mod 9)}$. The complete set of $|\ccalI_k|$ RU possibilities at time $k$ is notated as 
+%\begin{align}\label{eq_ru_sets}
+%\ccalS'_k :=\hat{\ccalS}^1_9 \cup \hat{\ccalS}^2_9 \cup \hdots \cup \hat{\ccalS}^{S_k-1}_9 \cup \hat{\ccalS}^{S_k}_{(|\ccalI_k| \mod 9)}.
+%\end{align}
+
+We now proceed to discuss how the PDR requirements previously derived are used to schedule the devices during a TXOP. Rather than employing a greedy method as is commonly done in wireless scheduling problems, in the proposed method we use assignment-type methods. In such assignment-type methods, we assign all scheduled devices to a PPDU and RU at the beginning of the TXOP rather than make scheduling decisions after each PPDU. To begin, we must determine a set of schedules that satisfy the constraints in \eqref{eq_c12}-\eqref{eq_c42}. Recall each device $i$ is selected to be scheduled at cycle $k$ with probability $\nu_{i,k}$ and define the set of $m_k$ devices to selected be scheduled as $\ccalI_k \subseteq \{1,2,\hdots,m\}$ where  $| \ccalI_k| = m_k$. To specify the sets of RUs that we consider in our scheduling, we first define some notation necessary in the description. We define $\hat{\ccalS}_{(n)} \subset \ccalS$ to be an arbitrary set of RUs that do not intersect over any frequency bands (i.e. satisfy the constraint in \eqref{eq_c12}) with exactly $n$ elements. To accommodate the $m_k$ devices to be scheduled, we consider a set of $S_k$ such sets  $\hat{\ccalS}_{(n_s)}$ with size $n_s$, whose combined elements total $\sum_{s=1}^{S_k} n_s = m_k$. In other words, we identify a set $S_k$ PPDUs in which the $s$th PPDU contains $n_s$ non-intersecting PPDUs. We define this full set of assignable RUs at cycle $k$ as
+%
+\begin{align}\label{eq_ru_sets}
+\ccalS'_k :=\hat{\ccalS}^1_{(n_1)} \cup \hat{\ccalS}^1_{(n_2)} \cup \hdots \cup \hat{\ccalS}^{S_k}_{(n_{S_k})}.
+\end{align}
+%
+
+Note that in \eqref{eq_ru_sets} we further superindex each set by a PPDU index $s$, in order to stress that elements are distinct between sets. That is, an RU $\bbsigma$ present in sets $\hat{\ccalS}^x_{(n_x)}$ and $\hat{\ccalS}^y_{(n_y)}$ is considered as two distinct elements in $\ccalS'_k$, denoted $\bbsigma^x$ and $\bbsigma^y$, respectively. In this way \eqref{eq_ru_sets} defines a complete set of  combinations of frequency-allocated RU and \emph{time}-allocated PPDUs to assign users during this cycle. We point out that there are numerous ways in which to define such sets of RUs in each PPDU that total $m_k$ assignments. There are various heuristic methods that may be employed to quickly identify a permissible assignment pool $\ccalS'_k$, and various simple heuristics may be developed to make this selection in a manner that reduces the overall latency of the transmission window. An example of the set $\ccalS'_k$ for scheduling $m_k = 14$ devices is shown in Table \ref{tab_rus}. 
+
+%%%%
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline 
+\textbf{PPDU 1} & \textbf{PPDU 2} & \textbf{PPDU 3}        \\ \hline \hline
+\multicolumn{1}{|c|}{RU 1} & \multicolumn{1}{c|}{\multirow{2}{*}{RU 10}} & \multicolumn{1}{c|}{\multirow{4}{*}{RU 13}} \\ \cline{1-1}
+\multicolumn{1}{|c|}{RU 2} & \multicolumn{1}{c|}{}                       & \multicolumn{1}{c|}{}                       \\ \cline{1-2}
+\multicolumn{1}{|c|}{RU 3} & \multicolumn{1}{c|}{\multirow{2}{*}{RU 11}} & \multicolumn{1}{c|}{}                       \\ \cline{1-1}
+\multicolumn{1}{|c|}{RU 4} & \multicolumn{1}{c|}{}                       & \multicolumn{1}{c|}{}                       \\ \hline
+\multicolumn{1}{|c|}{RU 5} & \multicolumn{1}{c|}{\multirow{4}{*}{RU 12}} & \multicolumn{1}{c|}{\multirow{4}{*}{RU 14}} \\ \cline{1-1}
+\multicolumn{1}{|c|}{RU 6} & \multicolumn{1}{c|}{}                       & \multicolumn{1}{c|}{}                       \\ \cline{1-1}
+\multicolumn{1}{|c|}{RU 7} & \multicolumn{1}{c|}{}                       & \multicolumn{1}{c|}{}                       \\ \cline{1-1}
+\multicolumn{1}{|c|}{RU 8} & \multicolumn{1}{c|}{}                       & \multicolumn{1}{c|}{}                       \\ \hline
+\multicolumn{1}{|c|}{RU 9} & \multicolumn{1}{c|}{}                       & \multicolumn{1}{c|}{}                       \\ \hline
+\end{tabular}
+\caption{Example of RU selection with $m_k= 14$ devices. There are a total of $S_k = 3$ PPDUs, given $n_1=9$, $n_2 = 3$, $n_3 = 2$ RUs, respectively.}
+\label{tab_rus}
+\end{table}
+%%%%%
+
+For all $i \in \ccalI_k$ and RU $\bbsigma \in \ccalS'_k$, define the largest affordable MCS given the \emph{modified} PDR requirement $\tdq_i(\hbx^{(l_i)}_{i,k})/\nu_{i,k}$ by
+ %
+ \begin{align}\label{eq_mcs_select}
+ \mu_{i,k}(\bbsigma) := \begin{cases}
+ \max \{\mu \mid q(\bbh_{i,k},\mu,\bbsigma) \geq \tdq_i(\hbx^{(l_i)}_{i,k})/\nu_{i,k}\} \\
+ 1,\quad  \text{ if } q(\bbh_{i,k},\mu,\bbsigma) < \tdq_i(\hbx^{(l_i)}_{i,k})/\nu_{i,k} \ \forall \mu
+ \end{cases}
+ \end{align}
+ %
+Observe in \eqref{eq_mcs_select} that, when no MCS achieves the desired PDR in a particular RU, this value is set to $\mu=1$ by default. The above adaptive MCS selection can be achieved based on channel conditions using the techniques outlined in~\cite{hoefel2016application}. This MCS selection subsequently then yields a corresponding time cost $\tau(\mu_{i,k}(\bbsigma), \bbsigma)$ for assigning device $i$ to RU $\bbsigma$. Further define an 3-D assignment tensor $V$---where $v^s_{ij}= 1$ when device $i$ is assigned to RU $\bbsigma^s_j$ and 0 otherwise---and $\ccalV$ as the set of all possible assignments. Recalling the form of the total transmission time given PPDU arrangements in \eqref{eq_time_slot}, the assignment that minimizes total transmission time is given by
+%
+\begin{align}\label{eq_assignment}
+V^* = \argmin_{V \in \ccalV} \sum_{s=1}^S \max_{j} \left[v^s_{ij} \tau(\mu_{i,k}(\bbsigma^s_j), \bbsigma_j^s)\right].
+\end{align}
+% 
+
+The expression in \eqref{eq_assignment} can be identified as a particular form of the \emph{assignment problem}, a common combinatorial optimization problem in which the selection of mutually exclusive assignment of agents to tasks incurs some cost. Here, the cost is the total transmission time across all PPDUs necessary for scheduled devices to meet the target PDRs. Assignment problems are generally very challenging to solve---there are $m_k!$ combinations---although polynomial-time algorithms exist for simple cases. The Hungarian method \cite{kuhn1955hungarian}, for example, is a standard method for solving linear-cost assignment problems. While the cost we consider in \eqref{eq_assignment} is nonlinear, the Hungarian method may be used as an approximation. Alternatively, other heuristic assignment approaches may be designed to approximate the solution to \eqref{eq_assignment}. We note that, for the simulations performed later in this paper, we apply such a heuristic method, the details of which are left out for proprietary reasons.
+%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%   A   L   G   O   R   I   T   H   M   %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%{\linespread{1.3}
+%\begin{algorithm}[t] \begin{algorithmic}[1]
+%\red{
+%\STATE \textbf{Parameters:} Lyapunov decrease rate $\rho$
+%\STATE \textbf{Input:} Initial states $\bbx_{i,0}$
+%\FOR [main loop]{$k = 1,2,\hdots$}
+%      \STATE Obtain current estimates of control states $\hbx^{(l_i)}_{i,k}$ for each device $i$ [cf. \eqref{eq_state_est}].
+%      \STATE Obtain channel measurements $\bbH_k$ via pilot signals.
+%      \STATE Compute target PDR $\tdq_i(\hbx^{(l_i)}_{i,k})$ for each device $i$ [cf. \eqref{eq_pdr_constraint}].
+%      \STATE Select devices with prob. $\nu_{i,k} = e^{\tdq_i(\hbx^{(l_i)}_{i,k})-1}$ [cf. \eqref{eq_prob_c}]
+%      \STATE Schedule selected devices via Algorthim \ref{alg_hungarian} or \ref{alg_maxmin}.
+%\ENDFOR}
+%\end{algorithmic}
+%\caption{Hungarian Method \cite{kuhn1955hungarian}}\label{alg_hungarian} \end{algorithm}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{method}[Linear approximation via Hungarian Method]\label{method_hungarian} \normalfont
+%While efficient methods to solve general assignment problems do not exist, the special case of linear cost assignment problems can be solved exactly in polynomial time. These cannot be applied directly to \eqref{eq_assignment} due to the nonlinearities introduced by the maximization operation in \eqref{eq_time_slot}. Consider, however, the following linear-cost surrogate assignment problem
+%%
+%\begin{align}\label{eq_assignment_linear}
+%V^* = \argmin_{V \in \ccalV} \sum_{s=1}^S \sum_{j} \left[v_{ijs} \tau(\mu_{i,k}(\bbsigma^s_j), \bbsigma_j^s)\right].
+%\end{align}
+%%
+%In \eqref{eq_assignment_linear}, we select the assignment that minimizes the sum of all individual transmission times, regardless of PPDU. With this approximation, we can perform the well-known Hungarian method \cite{kuhn1955hungarian}, which is known to solve linear-cost problems in $\ccalO(| \ccalI_k|^3)$ iterations \cite{edmonds1972theoretical}. While the cubic rate here may indeed become prohibitive when a very large number of devices are scheduled, the selective scheduling procedure will generally keep this runtime from becoming too large. We present in Algorithm \ref{alg_hungarian} the use of the Hungarian method on the linearly approximated scheduling problem.
+%\end{method}
+%%
+%%
+%\begin{method}[Max-min heursitic method]\label{method_maxmin} \normalfont
+%\blue{Add here. Or do not include?}
+%\end{method}
+%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%   A   L   G   O   R   I   T   H   M   %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{\linespread{1.3}
+\begin{algorithm}[t] \begin{algorithmic}[1]
+\STATE \textbf{Parameters:} Lyapunov decrease rate $\rho$
+\STATE \textbf{Input:} Channel conditions $\bbH_k$ and estimated states $\hbX_{k}$
+\STATE Compute target PDR $\tdq_i(\hbx^{(l_i)}_{i,k})$ for each device $i$ [cf. \eqref{eq_pdr_constraint}].
+\STATE Determine selection probabilities $\nu_{i,k}$ for each device [cf. \eqref{eq_prob_c}].
+\STATE Select devices $\ccalI_k$ with probs. $\{\nu_{1,k},\hdots,\nu_{m,k}\}$
+\STATE Determine set of RUs/PPDUs $\ccalS'_k$ [cf. \eqref{eq_ru_sets}].
+\STATE Determine maximum MCS for each device/RU assignment [cf. \eqref{eq_mcs_select}].
+\STATE Schedule selected devices via assignment method.
+\STATE \textbf{Return:} Scheduling variables $\{\bbSigma_k, \bbmu_k, \bbalpha_k\}$ 
+\end{algorithmic}
+\caption{Control-Aware Low Latency Scheduling (CALLS) at cycle $k$}\label{alg_calls} \end{algorithm}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+By combining these methods with the control-based PDR targets and selective scheduling procedure, we obtain the complete control-aware low-latency scheduling (CALLS) algorithm. The steps as performed by the centralized AP/controller are outlined in Algorithm \ref{alg_calls}. At each cycle $k$, the AP determines the scheduling parameters based on the current channel states $\bbH_k$ (obtained via pilot signals) and the current estimated control states $\hbX_k$ (obtained via \eqref{eq_state_est} for each device $i$). With the current state estimates, the AP computes target PDRs  $\tdq_i(\hbx^{(l_i)}_{i,k})$ for each device via \eqref{eq_pdr_constraint} in Step 3. In Step 4, the target PDRs are used to establish selection probabilities $\nu_{i,k}$ for each agent with \eqref{eq_prob_c}. After randomly selecting devices $\ccalI_k$ with their associated probabilities in Step 5, the set of RUs and PPDUs $\ccalS'_k$ are determined in Step 6 as in \eqref{eq_ru_sets} , based upon the number of devices selected to be scheduled $|\ccalI_k|$. In Step 7, the associated MCS values are determined each possible assignment of device to RU via \eqref{eq_mcs_select}. Finally, in Step 8 the assignment is performed using either the Hungarian method \cite{kuhn1955hungarian} or other user-designed heuristic assignment method. The resulting assignment determines the scheduling parameters $\bbSigma_k, \bbmu_k, \bbalpha_k$ for the current cycle. 
+ 
+ \begin{remark}\label{remark_latency}\normalfont
+ Observe that the CALLS method as outlined in Algorithm \ref{alg_calls} seeks to minimize the total latency of the transmission but does not explicitly prevent latency from exceeding some specific threshold $\tau_{\max}$. In practical systems, this limit may need to be enforced. In such a setting, the CALLS method can be modified so that all devices scheduled in PPDUs whose transmission end after $\tau_{\max}$ seconds do not transmit. 
+ \end{remark}

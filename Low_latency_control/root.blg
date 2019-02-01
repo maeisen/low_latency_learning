@@ -1,0 +1,18 @@
+This is BibTeX, Version 0.99dThe top-level auxiliary file: root.aux
+The style file: IEEEtran.bst
+Database file #1: wireless_ll_control.bib
+Database file #2: scheduling_control.bib
+Repeated entry---line 22 of file scheduling_control.bib
+ : @inproceedings{mamduhi2014event
+ :                                ,
+I'm skipping whatever remains of this entry
+Repeated entry---line 370 of file scheduling_control.bib
+ : @article{Schenato_foundations
+ :                              ,
+I'm skipping whatever remains of this entry
+-- IEEEtran.bst version 1.14 (2015/08/26) by Michael Shell.
+-- http://www.michaelshell.org/tex/ieeetran/bibtex/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+
+Done.
+(There were 2 error messages)

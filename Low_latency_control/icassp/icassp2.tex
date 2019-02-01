@@ -1,0 +1,202 @@
+%\documentclass[letterpaper, 9 pt, conference]{ieeeconf}  % Comment this line out if you need a4paper
+\documentclass{article}
+%\documentclass[a4paper, 10pt, conference]{ieeeconf}      % Use this line for a4 paper
+%\IEEEoverridecommandlockouts                              % This command is only needed ifyou want to use the \thanks command
+%\overrideIEEEmargins                                      % Needed to meet printer requirements.
+%\documentclass{article}
+\usepackage{spconf}
+\usepackage{cite}
+\usepackage{color}
+\usepackage[pdftex]{graphicx}
+\graphicspath{{fig/}{jpeg/}}
+\usepackage[cmex10]{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{epstopdf}
+\usepackage{algorithmic}
+\usepackage{subcaption}
+%\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{comment}
+\input{../mysymbol.sty}
+\input{../my_sections.tex}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{matrix} % for block alignment
+\usetikzlibrary{decorations.markings} % for arrow heads
+\usetikzlibrary{calc} % for manimulation of coordinates
+\usetikzlibrary{decorations.pathmorphing,snakes, positioning, decorations.pathreplacing}
+
+\usetikzlibrary{fit}
+%\input{figures/tikh_styles}
+
+\usepackage{pgfplots}
+\usepackage{color}
+%\usepackage{setspace}
+%\usepackage{hyperref}
+\usepackage{multirow}
+%\usepackage{rotating}
+%\usepackage{comment}
+%\usepackage{flushend}
+%\usepackage{caption}
+%\usepackage{subcaption}
+%\usepackage[affil-it]{authblk}
+%\usepackage{bm}
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+%\usepackage{enumerate}
+%\usepackage{morefloats}
+%\usepackage{setspace}
+
+\newcommand{\QED}{\hfill\ensuremath{\blacksquare}}
+\newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
+
+%\IEEEoverridecommandlockouts 
+\def \vneg {\vspace{-.5cm}}
+
+\def\whp{\text{w.h.p}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\supp{\text{support}}
+\def\Tr{\text{Tr}}
+
+
+
+%\addtolength{\textwidth}{10mm}
+%\addtolength{\evensidemargin}{-5mm}
+%\addtolength{\oddsidemargin}{-5mm}
+%\addtolength{\textheight}{10mm} 
+%\addtolength{\topmargin}{-5mm}
+
+%\renewcommand \blue[1]{}  \renewcommand \red[1]{}   
+
+\newtheorem{assumption}{\hspace{0pt}\bf Assumption}
+\newtheorem{lemma}{\hspace{0pt}\bf Lemma}
+\newtheorem{proposition}{\hspace{0pt}\bf Proposition}
+\newtheorem{example}{\hspace{0pt}\bf Example}
+\newtheorem{observation}{\hspace{0pt}\bf Observation}
+\newtheorem{theorem}{\hspace{0pt}\bf Theorem}
+\newtheorem{corollary}{\hspace{0pt}\bf Corollary}
+\newtheorem{fact}{\hspace{0pt}\bf Fact}
+\newtheorem{remark}{\hspace{0pt}\bf Remark}
+\newtheorem{test}{\hspace{0pt}\it Test Case}
+\newtheorem{definition}{\hspace{0pt}\bf Definition}
+\newtheorem{conj}{\hspace{0pt}\bf Conjecture}
+
+\addtolength{\textwidth}{10mm}
+\addtolength{\evensidemargin}{-5mm}
+\addtolength{\oddsidemargin}{-5mm}
+\addtolength{\textheight}{10mm} 
+\addtolength{\topmargin}{-5mm}
+
+
+
+% Title.
+% ------
+
+%
+% Single address.
+% ---------------
+\name{\begin{tabular}{c}Mark Eisen$^*$, Mohammad M. Rashid$^\dagger$, Konstantinos Gatsis$^*$ \\
+			Dave Cavalcanti$^\dagger$, Nageen Himayat$^\dagger$, Alejandro Ribeiro$^*$\end{tabular}
+\thanks{Supported by Intel Science and Technology Center for Wireless Autonomous Systems.}}
+\address{$^*$Department of Electrical and Systems Engineering, University of Pennsylvania \\
+$^\dagger$Wireless Communications Research, Intel Corporation}
+\title{Control Aware Communication Design for \\ Time Sensitive Wireless Systems}
+
+\begin{document} 
+\maketitle
+\ninept
+
+
+%\thispagestyle{empty}
+%
+\begin{abstract}
+We consider the problem of allocating radio resources over wireless communication links to control a series of independent low-latency wireless control systems common in industrial settings. Supporting wireless control in time sensitive settings requires fast data rates over wireless links, which comes at the cost of reliability. It is challenging to meet both latency and reliability requirements with an equal or arbitrary allocation of resources. We thus propose a novel control-aware approach to the low-latency scheduling problem in which we incorporate control and channel state information in allocating bandwidth and data rates across the wireless links. Control systems that are in desirable states are given modest requirements on error rates, while systems in undesirable states are given more priority. We derive control-aware packet error rate targets for each system to satisfy stability goals and make scheduling decisions to meet such targets while reducing total transmission time. The resulting control-aware based method is tested in simulation experiments that demonstrate its effectiveness in meeting control-based goals under tight latency constraints relative to control-agnostic scheduling.
+\end{abstract}
+%
+
+\begin{keywords}
+wireless control, low-latency, control-aware, scheduling
+\end{keywords}
+
+
+\section{Introduction}
+\input{introduction}
+
+%\input{Problem_formulation_icassp}
+
+\section{Time Sensitive Wireless Control Systems}\label{sec_problem}
+
+\input{problem_formulation}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%  S  E  C  T  I  O  N     %%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Control-Communication Co-Design}\label{sec_codesign}
+
+
+
+
+
+\input{scheduling_alg}
+
+
+
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   S   E   C   T   I   O   N   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ \section{Simulation Results}\label{sec_numerical_results}
+ 
+We perform a series of experimets on the canonical latency-constrained control problem of controlling a series of inverted pendulums on a horizontal cart. While conceptually simple, the highly unstable dynamics of the inverted pendulum make it a representative example of control system that requires fast control cycles, and subsequently low-latency communications when being controlled over a wireless medium. Consider a series of $m$ identical inverted pendulums---where each pendulum is attached at one end to a cart that can move along a single, horizontal axis---using the modeling of the inverted pendulum as provided by Quanser \cite{quanser}. The state is $p=4$ dimensional vector that maintains the position and velocity of the cart along the horizontal axis, and the angular position and velocity of the pendulum, i.e. $\bbx_{i,k} := [x_{i,k}, \dot{x}_{i,k}, \theta_{i,k}, \dot{\theta}_{i,k}]$. The system input $u_{i,k}$ reflects a horizontal force placed upon $i$th pendulum. By applying a zeroth order hold on the continuous dynamics with a state sampling rate of $0.01$ seconds and linearizing, we obtained the following discrete linear dynamic matrices of the pendulum system
+%
+\begin{align}\label{eq_control_orig}
+\bbA_i =
+\begin{bmatrix}
+1 & 0 & 0 & 0 \\
+0 & 2.055 & -0.722 & 4.828 \\
+0 & 0.023 & 0.91 & 0.037 \\
+0 & 0.677 & -0.453 & 2.055
+\end{bmatrix},
+\bbB_i =
+\begin{bmatrix}
+0.034 \\ 0.168 \\ 0.019 \\ 0.105
+\end{bmatrix}.
+\end{align}
+%
+
+Because the state $\bbx_{i,k}$ measures the angle of the $i$th pendulum at time $k$, the goal is to keep this close to zero, signifying that the pendulum remains upright. The input matrix $\bbK$ is computed to be a standard LQR-controller. For the definition of FDs, TDs, and data rates, we use the parameters of IEEE 802.11ax Wi-Fi protocol \cite{liu2014ieee}, referred to as resource units, PPDUs, and MCS, respectivley.
+
+We perform a set of experiments with the inverted pendulum varying both the latency threshold and number of devices $m$. We perform the scheduling using the proposed control-aware method for control-aware low latency scheduling and, as a point of comparison, consider scheduling using a standard fixed PDR of $0.99$ for all devices. Each simulation is run for a total of $1000$ seconds and is deemed ``successful'' if all pendulums remain upright for the entire run. We perform 100 such simulations for each combination of latency threshold and number of devices to determine how many devices we can support at each latency threshold using both the control-aware and fixed-PDR methods for scheduling.
+
+In the left of Figure \ref{fig_sim_results} we show the results of a representative simulation of the control of $m=25$ pendulum systems with a latency bound of $\tau_{\max} = 10^{-3}$ seconds. In both graphs we show the average distance from the center vertical of each pendulum over the course of 1000 seconds. In the top figure, we see by using the control-aware control-aware method we are able to keep each of the 25 pendulums close to the vertical for the whole simulation. Meanwhile, using the standard fixed PDR, we are unable to meet the scheduling limitations imposed by the latency threshold, and many of the pendulums swing are unable to be kept upright, as signified by the large deviations from the origin. This is due to the fact that certain pendulums were not scheduled when most critical, and they subsequently became unstable, while the control-aware adapted successfully to the needs of each system.
+
+
+We present in the right of Figure \ref{fig_sim_results} the maximum number of uses each scheduler could support under different latency requirements without any instability. Each device must be kept with a  $|\theta_{i,k}| \leq 0.05$ error region for 100 independent simulations. We observe that the control-aware approach is able to increase the number of devices supported in each case, with up to $1.5$ factor increase over the fixed PDR scheduling. 
+
+
+
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   S   E   C   T   I   O   N   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ \section{Conclusion}
+In this paper we develop a control-communication control-aware approach towards scheduling for low-latency, or time sensitive, wireless control systems. Because many control systems in industrial settings require very low latency transmission to operate effectively, there is an intrinsic challenge in trading off the data rates necessary to achieve low latency with the packet error rates necessary for high reliability. We demonstrate that packet delivery rates required to meet control-specific goals changes dynamically with the state of the systems. This allows to develop a scheduling method that smartly allocates bandwidth and data rates among many independent systems based upon their own current PDR requirements. We demonstrate the improvements relative to control-agnostic scheduling procedures in simulation experiments.
+
+
+\newpage 
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\urlstyle{same}
+\bibliographystyle{../IEEEbib}
+\bibliography{../wireless_ll_control,../scheduling_control}
+
+
+\end{document}

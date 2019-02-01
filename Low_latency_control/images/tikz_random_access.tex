@@ -1,0 +1,166 @@
+%!TEX root = root.tex
+\documentclass[]{standalone}
+
+\usepackage{amsmath} % nice math symbols
+
+\usepackage{color} % change text color        
+\usepackage{tikz}
+\usetikzlibrary{matrix} % for block alignment
+\usetikzlibrary{arrows, decorations.markings} % for arrow heads
+\usetikzlibrary{calc} % for manimulation of coordinates
+\usetikzlibrary{decorations.pathmorphing}
+\usetikzlibrary{shapes}
+
+\usetikzlibrary{fit}
+
+%\usetikzlibrary{backgrounds}
+
+
+
+\begin{document}
+% TikZ styles for drawing
+
+
+\pgfdeclarelayer{bg0}    % declare background layer
+\pgfdeclarelayer{bg1}    % declare background layer
+\pgfsetlayers{bg0,bg1,main}  % set the order of the layers (main is the standard layer)
+
+
+\tikzstyle{block} = [draw,rectangle,thick,
+%minimum height=0.7cm, minimum width=0.3cm, 
+text height=0.2cm, text width=0.7cm, 
+fill=blue!30, outer sep=0pt, inner sep=0pt]
+\tikzstyle{dots} = [font = \large, minimum width=2pt]
+\tikzstyle{dash_block} = [draw,rectangle,dashed,minimum height=1cm,minimum width=1cm]
+\tikzstyle{smallblock} = [draw,rectangle,minimum height=0.5cm,minimum width=0.5cm,fill= blue!30, font =  \scriptsize]
+\tikzstyle{smallcircle} = [draw,ellipse,minimum height=0.1cm,minimum width=0.3cm,fill= yellow!40, font =  \scriptsize ]
+\tikzstyle{connector} = [->]
+\tikzstyle{dash_connector} = [->,thick,decorate,decoration={snake, amplitude =1pt, segment length=8pt}, magenta]
+\tikzstyle{branch} = [circle,inner sep=0pt,minimum size=1mm,fill=black,draw=black]
+
+\tikzstyle{vecArrow} = [thick, decoration={markings,mark=at position
+   1 with {\arrow[semithick]{open triangle 60}}},
+   double distance=1.4pt, shorten >= 5.5pt,
+   preaction = {decorate},
+   postaction = {draw,line width=1.4pt, white,shorten >= 4.5pt}]
+
+\tikzset{>=latex}
+
+\begin{tikzpicture}[scale=1, blocka/.style ={rectangle,text width=0.6cm,text height=0.5cm, outer sep=0pt}]
+ \small
+  
+ 
+    % node placement with matrix library: 5x4 array
+    \matrix(M)[ampersand replacement=\&, row sep=0.25cm, column sep=0.25cm] {
+    
+    \node[smallblock, align=center, fill= green!30] (P1) {Plant {1}};\&
+		
+		\node[smallblock, align=center] (S1) {Sensor {1}};\&
+		\&
+		\&
+		\node[smallblock, align=center, fill= green!30] (P2) {Plant {2}};\&
+		
+		\node[smallblock, align=center] (S2) {Sensor {2}};\&
+		
+		
+%    \&
+    %\node(d0) {$\cdots$};\&
+%    \&
+    
+    \\
+
+    %\node(d1) {$\cdots$};\&
+%    \&
+    
+    \\
+		\\
+		\\
+		\\
+		\\
+		\\
+		\\
+		
+		\&
+		\node[smallblock, align=center] (C1) {Controller {1}};\&
+		\&
+		\&
+		\&
+		\node[smallblock, align=center] (C2) {Controller {2}};\&
+		
+		\\
+    %%
+    %\node[blocka] (R1) {};\&
+%%    \node[smallcircle] (R2) {R2};\&
+    %%\node[blocka] (d3) {};\&
+    %\node[blocka] (R2) {};\&
+    %\\
+    };
+    
+    
+    %\node[block] (outer) [fit=(R1.north west)  (R2.south east)] {};
+    %
+    %\node[align=center, font =  \scriptsize] at (outer.center) {Access Point/ \\Controller};
+    
+    \draw [->,  red] (S1.south) -- node[left, pos = 0.1]{ $\alpha_1$ } (C1.north);
+%    \draw [->, thick, magenta] (T2) -- node[left]{ \scriptsize $h_2$} (R2);
+    \draw [->, red] (S2.south) -- node[right, pos = 0.1]{ $\alpha_2$ } (C2.north);
+%    
+
+		\draw [->, dashed,  red] (S1.south) -- node[right, pos=0.2]{ } (C2.north);
+
+		\draw [->, dashed, red] (S2.south) -- node[left, pos=0.2]{ } (C1.north);
+		
+
+		%\begin{pgfonlayer}{bg0}    % select the background layer
+		%\draw [->, black] (C1.west) |- ($(C1) + (-25pt, 0pt)$) node(down_right){} 
+		%-- ($(P1) + (-25pt,+0pt)$) node(up_right){} -- (P1);
+		%\end{pgfonlayer}
+		
+		\begin{pgfonlayer}{bg0}    % select the background layer
+		\draw [->, black] (C1.west) -|   (P1.south);
+		\end{pgfonlayer}
+		
+				
+		%\begin{pgfonlayer}{bg0}
+		%\draw [->,  black] (R2) |- ($(R2) + (-25pt,-15pt)$) node(down_right){} 
+		%--($(P2) + (-25pt,+0pt)$) node(up_right){} -- (P2);
+		%\end{pgfonlayer}
+		
+		\begin{pgfonlayer}{bg0}    % select the background layer
+		\draw [->, black] (C2.west) -|   (P2.south);
+		\end{pgfonlayer}
+		
+			
+		\begin{pgfonlayer}{bg0}
+		\draw [->, black] (P1) -- (S1);
+		\end{pgfonlayer}
+		
+		\begin{pgfonlayer}{bg0}
+		\draw [->,  black] (P2) -- (S2);
+		\end{pgfonlayer}
+				
+				
+		%
+		\begin{pgfonlayer}{bg1}
+		%\begin{scope}[on background layer]
+		\node(shared) [fill=red!10, fit={
+		($(S1.south) + (-32pt, -12pt)$) 
+		($(S2.south) + (+8pt, -12pt)$)
+		($(C1.north) + (-32pt, +10pt)$)
+		($(C2.north) + (+8pt, +10pt)$)
+		}] {};
+		%\end{scope}
+		\end{pgfonlayer}
+		
+		\node[align=center, red!40, font =  \footnotesize](shared_medium) at ($(shared.center)-(50pt, 0)$) {Shared \\ Wireless \\ Medium};
+		
+
+\coordinate (FIRST NE) at (current bounding box.north east);
+   \coordinate (FIRST SW) at (current bounding box.south west);
+
+	\pgfresetboundingbox
+   \useasboundingbox ($(FIRST SW) + (+52pt,+3pt)$) rectangle ($(FIRST NE) + (-10pt,-2pt)$);
+
+
+\end{tikzpicture}
+\end{document}

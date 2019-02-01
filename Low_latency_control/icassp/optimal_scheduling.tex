@@ -1,0 +1,82 @@
+Using the communication model of 802.11ax just outlined and the control-based Lyapunov metric of \eqref{eq_perf}, we can formulate an optimization problem that characterizes the exact optimal scheduling of transmissions with a transmission window to maximize control performance. The optimal scheduling and allocation selects the set of RUs $\bbSigma$. MCS $\bbmu$, and PPDUs $\bbalpha$ for all devices--which in effect fully determine the schedule---such to minimize a cost subject to scheduling design and feasibility constraints. In particular, we discuss two related, alternative formulations of the low-latency scheduling problem.
+
+\subsection{Latency-constrained scheduling}\label{sec_optimal_a}
+In the latency-constrained formulation, we are interested in minimizing a common control cost subject to strict latency requirements. In particular, in the low-latency setting we set a bound $\tau_{\max}$ on the total transmission time across all PPDUs in a TXOP. This constraint is relevant in design of MAC-layer protocols that set strict limits on transmission times. In addition, the RU and PPDU allocation across devices must be feasible, i.e., two devices cannot be transmitting in the same frequency band in the same PPDU. 
+
+
+Recall the PDR function $q(\bbh,\mu,\bbsigma)$ and consider that this can alternatively be interpreted as the probability of closing the control loop under certain channel conditions and scheduling parameters. From there, we can now write the expected Lyapunov value for at time $k+1$ given its current state $\bbx_{i,k}$, channel state $\bbh_{i,k}$, MCS $\mu_i$, and RU $\bbsigma_i$ using the expected cost in \eqref{eq_perf}. By defining $\bbx_{i,k+1}^c$ and $\bbx_{i,k+1}^o$ as the closed loop and open loop states, respectively, as determined by the switched system in \eqref{eq_control_switch}, this is written as
+%
+\begin{align}
+J_i(\hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i) &:= \E (L(\bbx_{i,k+1}) \mid \hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i) \nonumber \\
+=& (1-q(\bbh_{i,k},\mu_i,\bbsigma_i))  \E L(\bbx_{i,k+1}^o \mid \hbx^{(l_i)}_{i,k}) \nonumber \\
+&+q(\bbh_{i,k},\mu_i,\bbsigma_i) \E L(\bbx_{i,k+1}^c \mid \hbx^{(l_i)}_{i,k}). \label{eq_lyap_p}
+\end{align}
+%
+
+For notational convenience, we collect all current estimated control states at time $k$ as $\hbX_k := [\hbx^{(l_1)}_{1,k}, \hdots, \hbx^{(l_m)}_{m,k}]$ and channel states $\bbH_k = [\bbh_{1,k}, \hdots, \bbh_{m,k}]$. Now, define the total control cost, given the current states and scheduling parameters as some aggregation of the combined expected future Lyapunov costs across all devices, i.e.,
+%
+\begin{align}\label{eq_cost_total}
+ \tdJ( \hbX_{k},&\bbH_{k}, \bbmu, \bbSigma) := \\
+ &g(J_1(\hbx^{(l_1)}_{1,k},\bbh_{1,k},\mu_1,\bbsigma_1), \hdots, J_m(\hbx^{(l_m)}_{m,k},\bbh_{m,k},\mu_m,\bbsigma_m)). \nonumber
+ \end{align}
+ %
+ Natural choices of the aggregation function $g(\cdot)$ are, for example, either the sum or maximum of its arguments. 
+
+The optimal scheduling at transmission time $k$ is formulated as the one which minimizes this cost $\tdJ$ while satisfying low-latency and feasibility requirements of the schedule, expressed formally with the following optimization problem.
+%
+\begin{align}\label{eq_problem}
+[&\bbSigma_k^*, \bbmu_k^*,\bbalpha_k^*]  := \argmin_{\bbSigma, \bbmu, \bbalpha, S} \tdJ(\hbX_{k},\bbH_{k}, \bbmu, \bbSigma) \\
+& \quad \st \sum_{i: \alpha_i = s} \varsigma_{i}^j \leq 1, \quad \forall j, s, \label{eq_c1} \\
+& \qquad \quad \sum_{s=1}^S \hat{\tau}(\bbSigma, \bbmu, \bbalpha, s)  \leq \tau_{\max}, \label{eq_c2}\\
+& \qquad \quad 1 \leq \alpha_i \leq S, \quad \forall i, \label{eq_c3}\\
+& \qquad \quad \bbsigma_i \in \ccalS, \ \forall i, \quad \bbmu \in \ccalM^m, \quad \bbalpha \in \mathbb{Z}_+^m, \quad S \in \mathbb{Z}_+. \label{eq_c4}
+\end{align}
+%
+The optimization problem in \eqref{eq_problem} provides a precise and instantaneous selection of frequency allocations between devices given their current control states $\hbX_k$ and communication states $\bbH_k$. The constraints in \eqref{eq_c1}-\eqref{eq_c4} encode the following scheduling conditions. The constraint \eqref{eq_c1} ensures that for every PPDU $s$, there is only one device transmitting on a frequency slot $j$. In \eqref{eq_c2}, we set the low-latency transmission time constraint in terms of the sum of all transmission times for each PPDU $s$. The constraint in \eqref{eq_c3} bounds each transmission slot by the total number of PPDU's $S$ while \eqref{eq_c4} constrains each variable to its respective feasible set. Note that $S$ is itself treated as an optimization variable in the above problem, so that the number of PPDUs may vary as needed.
+
+Observe in the objective in \eqref{eq_problem} that, by minimizing an aggregate of local control costs, the devices with the highest cost $J_i$ as described by \eqref{eq_lyap_p} will be given the most bandwidth or most favorable frequency bands to increase probability of successful transmission $q(\bbh_{i,k},\mu_i,\bbsigma_i)$. This in effect increases the chances those devices will close their control loops and be driven towards a more favorable state. Likewise, a device who is experiencing very adverse channel conditions may not be allocated prime transmission slots to reserve such resources who have more favorable channel conditions. In this way, we say this is \emph{control-aware} scheduling, as it considers both the control and channel states of the devices to determine optimal scheduling. However, we stress that the optimization problem described in \eqref{eq_problem}-\eqref{eq_c4} is by no means easy to solve. In fact, the optimization over multiple discrete variables makes this problem combinatorial in nature. In the following section, we discuss a practical reformulation of the problem above and develop heuristic methods to approximate the solutions in realistic low-latency wireless applications. 
+
+
+%\begin{remark}\label{remark_per}\normalfont
+%The value in the formulation above is not only in its adaptability to the control system itself, but informs the choosing of transmission success rates---or, effectively, the packet error rates (PER)---that are necessary to keep the control systems in favorable states. Depending on the particular system dynamics described in \eqref{eq_control_orig}, such PERs may be considerably more lenient than the default target transmission success rates used in practical wireless systems (e.g. $10^{-3}$). This notion is explored more explicitly in Section \ref{sec_per}.
+%\end{remark}
+
+\subsection{Control-constrained scheduling}\label{sec_optimal_b}
+We reformulate the problem in \eqref{eq_problem}-\eqref{eq_c4} to an alternative formulation that more directly informs the control-aware, low-latency scheduling method to be developed. To do so, we introduce a \emph{control-constrained} formulation, in which the Lyapunov decrease goals are presented as explicit requirement, i.e. constraints in the optimization problem. We are interested, then, in constraint of the form
+%
+\begin{align}\label{eq_control_constraint}
+\tdJ(\hbX_{k},\bbH_{k}, \bbmu, \bbSigma) \leq J_{\max},
+\end{align}
+%
+where $J_{\max}$ is a limiting term design to enforce desired system performance. Determining this constant is largely dependent on the particular application of interest, needs of the control systems, and also may be related to the choice aggregation function $g(\cdot)$ in \eqref{eq_cost_total}. For example, $J_{\max}$ may represent a point at which control systems become volatile, unsafe, or unstable.
+
+For the scheduling procedure developed in this paper, we focus on a particular formulation of the control constraint in \eqref{eq_control_constraint} that constrains the expected future Lyapunov value of each system by a rate decrease of its current value. In particular the following rate-decrease condition for each device $i$,
+%
+\begin{align}\label{eq_lyap_constraint}
+J_i(\hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i) \leq \rho_i \E [L(\bbx_{i,k}) \mid \hbx^{(l_i)}_{i,k}] + c_i,
+\end{align}
+%
+where $\rho_i \in (0,1]$ is a decrease rate and $c_i \geq 0$ is a constant. Recall the definition of $J_i(\hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i)$ in \eqref{eq_lyap_p} as the expected Lyapunov value of time $k+1$ given its current estimate and scheduling $\mu_i, \bbsigma_i$. The constraint in \eqref{eq_lyap_constraint} ensures the future Lyapunov cost will exhibit a decrease of at least a rate of $\rho_i$ for device $i$ in expectation. The constant $c_i$ is included to ensure this condition is satisfied by default if the state $\hbx^{(l_i)}_{i,k}$ is already sufficiently small. 
+
+We formulate the control-constrained scheduling problem by substituting the latency constraint with the control constraint in \eqref{eq_lyap_constraint}, i.e.,
+%
+\begin{align}\label{eq_problem2}
+[&\bbSigma_k^*, \bbmu_k^*,\bbalpha_k^*]  := \argmin_{\bbSigma, \bbmu, \bbalpha, S} \sum_{s=1}^S \hat{\tau}(\bbSigma, \bbmu, \bbalpha, s) \\
+& \quad \st \sum_{i: \alpha_i = s} \varsigma_{i}^j \leq 1, \quad \forall j, s, \label{eq_c12} \\
+& \quad   J_i(\hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i) \leq \rho \E [L(\bbx_{i,k}) \mid \hbx^{(l_i)}_{i,k}] + c_i \ \forall i, \label{eq_c22}\\
+& \qquad \quad 1 \leq \alpha_i \leq S, \quad \forall i, \label{eq_c32}\\
+& \qquad \quad \bbsigma_i \in \ccalS, \ \forall i, \quad \bbmu \in \ccalM^m, \quad \bbalpha \in \mathbb{Z}_+^m, \quad S \in \mathbb{Z}_+. \label{eq_c42}
+\end{align}
+%
+Observe that the objective in \eqref{eq_problem2} is now to minimize the total transmission time, rather than being forced as an explicit constraint. In this way, the optimization problem defined in 
+\eqref{eq_problem2}-\eqref{eq_c42} can be viewed as an alternative to the latency constrained problem in \eqref{eq_problem}-\eqref{eq_c4}. Because the scheduling algorithm we develop in this paper requires the ability to quickly identify feasible solutions, we focus our attention on the control-constrained formulation in \eqref{eq_problem2}-\eqref{eq_c42}. Before presenting the details of the scheduling algorithm, we present a brief remark regarding the  addition of ``safety'', or worst-case, constraints to either problem formulation.
+
+\begin{remark}\label{remark_worst_case}\normalfont
+The control constraint in \eqref{eq_c22} is formulated to guarantee an average decrease of expected Lyapunov value by a rate of $\rho$. This is of interest to ensure the system states are driven to zero over time. However, in practical systems we may also be interested in protecting against worst-case behavior, e.g. entering an unsafe or unstable region. Consider a vector $\bbb_i \in \reals^p$ as the boundary of safe operation of system $i$. A constraint that protects against exceeding this boundary can be written as
+%
+\begin{align}\label{eq_worst_case}
+\P [ |\bbx_{i,k+1}| \geq \bbb_i \mid \hbx^{(l_i)}_{i,k},\bbh_{i,k},\mu_i,\bbsigma_i ] \leq \delta,
+\end{align}
+%
+where $\delta \in (0,1)$ is small. The expression in \eqref{eq_worst_case} can be included as an additional constraint to either the latency-constrained or control-constrained scheduling problems previously discussed.
+\end{remark}

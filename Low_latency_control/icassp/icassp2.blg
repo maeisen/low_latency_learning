@@ -1,0 +1,54 @@
+This is BibTeX, Version 0.99d (TeX Live 2015)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: icassp2.aux
+The style file: ../IEEEbib.bst
+Database file #1: ../wireless_ll_control.bib
+Database file #2: ../scheduling_control.bib
+Repeated entry---line 43 of file ../scheduling_control.bib
+ : @inproceedings{mamduhi2014event
+ :                                ,
+I'm skipping whatever remains of this entry
+Warning--empty journal in EisenEtal18
+Warning--empty year in EisenEtal18
+You've used 27 entries,
+            1838 wiz_defined-function locations,
+            626 strings with 8567 characters,
+and the built_in function-call counts, 7404 in all, are:
+= -- 698
+> -- 300
+< -- 10
++ -- 110
+- -- 83
+* -- 600
+:= -- 1099
+add.period$ -- 30
+call.type$ -- 27
+change.case$ -- 25
+chr.to.int$ -- 0
+cite$ -- 29
+duplicate$ -- 314
+empty$ -- 708
+format.name$ -- 83
+if$ -- 1681
+int.to.chr$ -- 0
+int.to.str$ -- 27
+missing$ -- 28
+newline$ -- 137
+num.names$ -- 27
+pop$ -- 79
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 0
+skip$ -- 164
+stack$ -- 0
+substring$ -- 623
+swap$ -- 107
+text.length$ -- 10
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 0
+warning$ -- 2
+while$ -- 76
+width$ -- 29
+write$ -- 297
+(There was 1 error message)

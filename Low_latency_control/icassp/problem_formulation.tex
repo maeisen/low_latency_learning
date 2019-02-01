@@ -1,0 +1,78 @@
+%%%%%%%%%%%%%%%%% F I G U R E %%%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{figure}
+%\centering
+%\input{../images/tikz_wncs4}
+%\caption{Wireless control system with $m$ independent systems. Each system contains a sensor that measure state information, which is transmitted to the controller over a wireless channel. The state information is used by the controller to determine control policies for each of the systems.The communication is assumed to be wireless in the uplink and ideal in the downlink.}
+%\label{fig_wcs}
+%\end{figure}
+
+
+Consider a system of $m$ independent linear control systems, or devices, where each system $i=1,\hdots,m$ maintains a state variable $\bbx_{i} \in \reals^p$. The dynamics evolve over a discrete time index $k$.  Applying an input $\bbu_{i,k} \in \reals^q$ causes the state and output to evolve based on the generic state space representation,
+%
+\begin{align}\label{eq_control_orig}
+\bbx_{i,k+1} &= \bbA_{i} \bbx_{i,k} + \bbB_{i} \bbu_{i,k} + \bbw_k
+\end{align}
+%
+where $\bbA_{i} \in \reals^{p \times p}$ and $\bbB_{i} \in \reals^{p \times q}$ are matrices that define the system dynamics, and $\bbw_{k} \in \reals^{p}$ is Gaussian noise with co-variance $\bbW_i$ that captures the noise in the model. We further assume the state transition matrix $\bbA_i$ is on its own unstable, i.e. has at least one eigenvalue greater than 1. This is to say that, without an input, the dynamics will drive the state $\bbx_{i,k} \rightarrow \infty$ as $k \rightarrow \infty$.
+
+In the time sensitive wireless control system, each system is closed over a wireless medium through which the sensor located at the control plant sends state information to the controller located at a common wireless base station (BS). Using the state information $\bbx_{i,k}$ received from device $i$ at time $k$, the controller determines the input $ \bbu_{i,k}$ to be applied. We stress that, due to the latency constraints of the control system operation, the BS gives each device only a short time window, or transmission opportunity, to finish transmitting its state information. This model restricts its attention to wireless connections in uplink of the control loop, while downlink is assumed to occur over an ideal channel.
+
+To derive the mathematical model, consider a generic linear control $ \bbu_{i,k} = \bbK_i \bbx_{i,k}$ for some matrix $\bbK_i \in \reals^{q \times p}$. Many common control policies indeed can be formulated in such a manner, such as LQR control. This matrix $\bbK$ is chosen such that the closed loop dynamics $\bbA + \bbB \bbK$ has all eigenvalues less that 1. Due to noise in the channel, there is potential for state information packets  to be dropped in the uplink, which is modeled as ``open-loop'' configuration. Meanwhile, successful transmission are modeled as a ``closed-loop'' configuration. To account for incomplete state information at the BS due to packet drops, we consider the estimate of state information of device $i$ known to the BS/controller at time $k$ as
+%
+\begin{align}\label{eq_state_est}
+\hbx^{(l_i)}_{i,k} :=(\bbA_i + \bbB_i\bbK_i)^{l_i} \bbx_{i,k-l_i},
+\end{align}
+%
+where $k-l_i \geq k-1$ is the last time instance in which control system $i$ was closed. Observe that in \eqref{eq_state_est} we assume that the BS/controller has knowledge of $\bbA_i, \bbB_i$, and $\bbK_i$, but not the noise $\bbw_k$ present in \eqref{eq_control_orig}. 
+
+At time $k$, if the state information is received, the controller applies the input $\bbu_{i,k} = \bbK_i \bbx_{i,k}$ using the exact state, and otherwise applies input $\bbu_{i,k} = \bbK_i \hbx_{i,k}$. We obtain then the following switched system dynamics for $\bbx_{i,k}$ as
+%
+\begin{align}\label{eq_control_switch}
+\bbx_{i,k+1} &= \begin{cases}
+(\bbA_i + \bbB_i \bbK_i) \bbx_{i,k} + \bbw_k, \ \text{in closed-loop}, \\
+\bbA_i \bbx_{i,k} + \bbB_i\bbK_i\hbx^{(l_i)}_{i,k} + \bbw_k, \ \text{in open-loop}.
+\end{cases}
+\end{align}
+%
+The transmission counter $l_i$ is updated at time $k$ as
+%
+\begin{align}
+l_i &\leftarrow \begin{cases}
+1, \ \text{in closed-loop}, \\
+l_1 + 1, \ \text{in open-loop}.
+\end{cases} \label{eq_time_switch}
+\end{align}
+%
+Observe that the successive error between the true and estimated state can be written as
+$\bbe_{i,k} := \bbx_{i,k} - \hbx^{(l_i)}_{i,k} = \sum_{j=0}^{l_i-1}\bbA_i^{j} \bbw_{i,k-j-1}$. It is evident that this error grows with the transmission counter $l_i$. We proceed now to describe the architecture of the wireless communications that determines both the speed and error rate of the state information transmissions over the wireless channel.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Communication architecture}\label{sec_comm_model}
+
+We consider a standard communication architecture in which, within a transmission window of a single cycle in the control loop, devices are scheduled by the BS across discrete time division (TD) and frequency division (FD) slots, both of which may vary in size. To adapt transmission lengths, each device is given a data rate (DR) parameter. Collectively, the assignment of device to their respective TDs, FDs, and with determined DR fully specifies the scheduling for the given transmission window. This architecture reflects that used scheduling-based multiple access wireless protocols, such as LTE \cite{sesia2011lte} , 5G \cite{agiwal2016next}, and next-generation WiFi IEEE 802.11ax \cite{liu2014ieee}. The transmission power is assumed fixed and equal across all devices.
+
+We state this model formally with the following variable definitions. Consider that the total allowable bandwidth is divided into $b$ discrete bands of equal size,  the FD slot of device $i$ is specified by a binary vector $\bbsigma_{i} \in \{0,1\}^b$, where the $j$ element $\bbsigma_i(j) = 1$ if device $i$ transmits in the $j$th frequency band. Note that a device may transmit in multiple \emph{adjacent} bands simultaneously to indicate a FD slot of larger bandwidth. Because not all binary vectors of length $b$ define a possible FD, we define the set $\ccalS \subset \{0,1\}^{b}$ to collect such a set of definable FD vectors.  The FD assignment $\bb0 \in \ccalS$ is defined to reflect that a device does not transmit.
+
+We further define for device $i$ a positive integer value $\alpha_i \in \{1,2,\hdots,S\}$ that denotes its TD slot and a real-valued $\mu_i \geq \mu_0$ to denote its DR, where $\mu_0$ is a minimum allowable rate. Finally, we define $\bbh_{i,k} \in \reals^b_+$ to be the set of fading channel states experienced by device $i$ at cycle $k$, where $\bbh_{i,k}(j)$ is the fading channel gain in frequency band $j$. We assume that channel conditions do not change across different TDs within a single cycle/transmission window $k$.
+
+The variables $\{\bbsigma_i, \alpha_i, \mu_i\}$ define the scheduling specification for user $i$ and, with the channel conditions $\bbh_{i,k}$, determine the communication performance obtained with such a scheduling decision. We first define a function  $q(\bbh,\mu,\bbsigma)$ which returns the probability of successful transmission/closing loop, otherwise called packet delivery rate (PDR)---given the channel conditions, DR and FD selections (this is independent of TD selection). Likewise, define by $\tau(\mu,\bbsigma)$ a function that, given an DR $\mu$ and FD $\bbsigma$, returns the maximum time taken for a single transmission attempt (this is independent of TD selection and channel conditions). Both of these functions play a critical role in determining scheduling decisions in time-sensitive wireless control system settings. We are, in particular, interested in exploring the trade-off between PDR and transmission time that comes from varying $\mu$. Generally speaking, the functions $q(\bbh,\mu,\bbsigma)$ and $\tau(\mu,\bbsigma)$ relate to $\mu$ by 
+%
+\begin{equation}
+\mu' > \mu \implies q(\bbh,\mu',\bbsigma) \leq q(\bbh,\mu,\bbsigma), \quad \tau(\mu',\bbsigma) \leq \tau(\mu,\bbsigma).
+\end{equation}
+%
+
+The goal then is to determine schedule $\{\bbsigma_i, \alpha_i, \mu_i\}_{i=1}^m$ at every cycle $k$ that keeps all control systems in a region of desirable performance, while keeping the total transmission time across all TDs small to meet latency requirements.
+
+%Because a TD cannot finish until all transmissions within the TD have been completed, the total transmission time of a single TD $s$ is the maximum transmission time taken by all devices within that time slot. We define the transmission time of TD slot $s$ as
+%%
+%\begin{equation}\label{eq_time_slot}
+%\hat{\tau}(\bbSigma, \bbmu, \bbalpha, s) := \max_{i: \alpha_i = s} \tau(\mu_i, \bbsigma_i) + \tau_0(\bbalpha,s),
+%\end{equation}
+%%
+%where $\tau_0: \mathbb{Z}_{++}^m \times \mathbb{Z}_{++} \rightarrow \reals_+$ is a function that specifies the communication overhead of TD $s$. This overhead may consist of, e.g., the time required to send TFs to scheduled users, as seen in Figure \ref{fig_multiplex}.
+

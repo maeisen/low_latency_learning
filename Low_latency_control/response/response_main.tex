@@ -1,0 +1,163 @@
+\documentclass[11pt]{article}
+\usepackage{pgfplots,graphics, subfigure,vmargin, amsfonts, amsbsy, amsmath, color}
+\usepackage{for_authors_reply}
+\input{mysymbol.sty}
+
+\setpapersize{USletter}
+%\setmarginsrb{leftmargin}{topmargin}{rightmargin}{bottommargin}{headheight}{headsep}{footheight}{footskip}
+ \setmarginsrb{1.0in}     {0.8in}    {1.0in}      {.8in}        {.2in}      {0.3in}   {.2in}       {0.3in}
+
+\pagestyle{fancy}
+\footrulewidth 0.5pt
+\lfoot{\small \today}
+\cfoot{}
+\rfoot{\small \thepage}
+\lhead{IEEE Internet of Things Journal {\bf Paper:OoT-5520-2018  } - Authors' Response}
+
+
+\newcommand {\mytitledproof}[1] {\medskip\noindent{\bf Proof (#1): }}
+\def         \myproof           {\noindent{\bf Proof: }}
+\def \myQED       {\hfill\QED \\ \vspace{-12pt} \\ \noindent}
+\def \myQEDnotext {\hfill\QED}
+\def \notation    {\medskip\noindent{\bf Notation: }}
+\def \SINR        {{\rm SINR}}
+\newcommand \Eh[1]    {{\mathbb E}_{\bbh}\left[ #1 \right]}
+\newcommand \EhBig[1] {{\mathbb E}_{\bbh}\Big[ #1 \Big]}
+\newcommand \Eht[1]   {{\mathbb E}_{\bbh(t)}\left[ #1 \right]}
+\newcommand \Ep[1]    {{\mathbb E}_{m(\bbp(\bbh))}\left( #1 \right)}
+\newcommand \Ehp[1]   {{\mathbb E}_{\bbh,\bbp(\bbh)}\left[ #1 \right]}
+
+\def \distlamt        {\big\|\bblam(t)     - \bblam^* \big\|^2}
+\def \distlamtns      {\big\|\bblam(t)     - \bblam^* \big\|}
+\def \distlamtpone    {\big\|\bblam(t+1)   - \bblam^* \big\|^2}
+
+\newcommand \Cif[1] {C_{if}\big(#1\big)}
+%\newcommand \inlineCif[1] {C_{if}\big(#1\big)}
+\def \Cift {\Cif{h_{if}(t),p_{if}(t)}}
+\def \Cifh {\Cif{h_{if},p_{if}(\bbh)}}
+\def \Cifhtpnot {\Cif{h_{if}(t),p_{if}}}
+%\def \inlineCift      {\Cif{h_{if}(t),p_{if}(t)}}
+%\def \inlineCifh      {\Cif{h_{if},p_{if}(\bbh)}}
+%\def \inlineCifhtpnot {\Cif{h_{if}(t),p_{if}}}
+
+
+\newcommand{\e}{\mathtt{e}}
+\newcommand{\R}{\mathbb{R}} 
+\newcommand{\N}{\mathcal{N}}
+\def\forall{\text{for all\ }}
+\def\N{n}
+\def \sech {\text{sech}}
+
+\def \hbS {{\bf \hat{S}}}
+
+\def \mph         {m\big(\bbp(\bbh)\big)}
+\def \mphstar         {m^{*}\big(\bbp(\bbh)\big)}
+\def \mpht        {m\big(\bbp(\bbh(t))\big)}
+\def \moph        {m_{0}\big(\bbp(\bbh)\big)}
+\def \fphh        {\bbf_{1}\big(\bbp(\bbh);\bbh\big)}
+\def \fphhu       {\bbf_{1}\big(\bbp(\bbh(u));\bbh(u)\big)}
+\def \fphht       {\bbf_{1}\big(\bbp(\bbh(t));\bbh(t)\big)}
+\def \fptht       {\bbf_{1}\big(\bbp(t);\bbh(t)\big)}
+\def \fpuhu       {\bbf_{1}\big(\bbp(u);\bbh(u)\big)}
+\def \fphtlamtht  {\bbf_{1} \big(\bbp(\bbh(t),\bblam(t));\bbh(t) \big)}
+\def \fpohh    {\bbf_{1}\big(\bbp(\bbh);\bbh\big)}
+\def \lagrangian  {\ccalL[\bblam,\bbx,\mph]}
+\def \lagrangianforreviewer  {\ccalL[\bblam_{2},\bbx]}
+\def \lagrangiansubzero  {\ccalL_{0}\left[\bblam,\bbx,\mph\right]}
+\def \lagrangiansubzerot  {\ccalL_{0}\left[\bblam(t),\bbx,\mph\right]}
+\def \lagrangiant {\ccalL\left[\bblam(t),\bbx, \mph\right]}
+\def \dest {{\rm dest}}
+
+\def\E{\mathbb{E}}
+
+\begin{document}
+
+\title{Control Aware Radio Resource Allocation in Low Latency Wireless Control Systems}
+\author{Mark Eisen$^*$ \quad Mohammad M. Rashid$^\dagger$ \quad Konstantinos Gatsis$^*$ \\ Dave Cavalcanti$^\dagger$\quad Nageen Himayat$^{\dagger}$ \quad Alejandro Ribeiro$^*$ \\ $^{*}$University of Pennsylvania \quad $^{\dagger}$Intel Corporation} \maketitle                                    %%%%
+
+\editor
+
+\red{
+We thank the associate editor and the reviewers for the time and effort invested in providing constructive suggestions. The requests most common among the reviewers concerned numerous points of clarification that add to the understandability and readability of the manuscript. Two reviewers raised questions and comments regarding the derivation of the problem in Example 1. Reviewers also raised key questions regarding some assumptions made in the analysis.  A more detailed account of the major changes implemented in the manuscript follows.
+
+\begin{itemize}
+
+\item[{\bf[C1]}] Reviewers 1 and 3 expressed concerns about the derivation of Example 1 and the stability analysis in Section V-C. We have thus expanded upon Example 1 that makes the derivations more explicit. We have revised Section V-C to give further details on the stability claim. We have also identified an omission in the previous version that has been corrected. More specifically, assuming we have a statistically accurate dual variable solution, using Proposition 2 and Theorem 2 we argue that the actual packet success rate selected by the algorithm can be made sufficiently close to the optimal one. Since the latter leads to system stability then the packet success rate selected by our algorithm also leads to stability. We thank the reviewers for these comments.
+
+
+\item[{\bf[C2]}] Reviewer 1 has suggested some additional numerical experiments to explore the effects of different parameters in the performance. Per the reviewer's suggestion, we have added Figure 4 to the paper, which compares both the suboptimality and constraint violation of the resource allocations generated by Newton's method over a non-stationary channel using two different accuracies $\hat{V}$. The results demonstrate an interesting effect that can occur if the choice of $\hat{V}$ is too strict. We thank the reviewer for this suggestion.
+
+
+\item[{\bf[C3]}] Reviewers raised numerous questions regarding some of the practical considerations in Section VI, such as backtracking parameter selection as well as satisfying the non-stationary assumption in Assumption 4. To address these concerns, we have added additional details to Section VI to clarify many of these points, and an additional remark after Assumption 4. We thank the reviewers for raising these questions.
+
+
+\end{itemize}}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   R   E   V   I   E   W   E   R    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reviewer
+
+\red{We thank the reviewer for the comments, feedback, and questions. The reviewer raised thoughtful questions about the modeling of the problem and some of the assumptions made in the paper. The reviewer also suggests to make the numerical results more thorough. Each concern is addressed individually below:}
+
+\issue{ The authors need to recast the framework within ultra-reliable and low-latency control and communication.}
+\answer{\red{To be written}}
+
+\issue{ It was unclear whether the focus is on communication for a given control or the other way around. Taht is currently it looks like the solution is based on sequential design.}
+\answer{\red{To be written}}
+
+\issue{ The article would improve a lot if specific use cases are defined.}
+\answer{\red{To be written}}
+
+\issue{ Linear control was adopted (for tractability) but clearly the nonlinearity is needed}
+\answer{\red{To be written}}
+
+\issue{Reliability as not addressed however it is intertwined with latency}
+\answer{\red{To be written}}
+
+\issue{Authors did not cite recent and fundamental articles within URLLC:}
+\answer{\red{To be written}}
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   R   E   V   I   E   W   E   R    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reviewer
+
+\red{We thank the reviewer for the comments, feedback, and questions. The reviewer raised thoughtful questions about the modeling of the problem and some of the assumptions made in the paper. The reviewer also suggests to make the numerical results more thorough. Each concern is addressed individually below:}
+
+\issue{ Currently, it is not easy to follow the abstract. It should be revised. The contributions of the this paper should be highlighted.}
+\answer{\red{To be written}}
+
+\issue{  In simulation part, it would be great if the authors could compare the proposed CALLS method with other methods if possible, since there are also some papers discussing communication resource allocation for multiple control loops.}
+\answer{\red{To be written}}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   R   E   V   I   E   W   E   R    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\reviewer
+
+\red{We thank the reviewer for the comments, feedback, and questions. The reviewer raised thoughtful questions about the modeling of the problem and some of the assumptions made in the paper. The reviewer also suggests to make the numerical results more thorough. Each concern is addressed individually below:}
+
+\issue{ Why do you only consider the AWGN channels?  How will your scheme performance when considering fading channels? Is the fading channel also a typical scenario for WiFi based in-door wireless control system?  }
+\answer{\red{To be written}}
+
+\issue{In your system, how do you obtain accurate channel state information? E.g. for AWGN channels, you need to test the noise variance. Is your scheme sensitive to channel estimation errors?}
+\answer{\red{To be written}}
+
+\issue{The proposed system shall be compared to more existed typical scheduling scheme employed in control system.}
+\answer{\red{To be written}}
+
+
+
+
+
+
+
+
+\end{document}

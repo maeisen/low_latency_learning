@@ -1,0 +1,17 @@
+\begin{tikzpicture}[scale=0.7]
+\begin{axis}[
+    ybar,
+    enlargelimits=0.15,
+    legend style={at={(0.5,0.85)},
+      anchor=north,legend columns=-1},
+    ylabel={\# devices supported},
+    symbolic x coords={0.5 ms,1 ms,1.5 ms},
+    xtick=data,
+    nodes near coords,
+    nodes near coords align={vertical},
+    ]
+\addplot coordinates {(0.5 ms,9) (1 ms,19) (1.5 ms,36)};
+\addplot coordinates {(0.5 ms,12) (1 ms,28) (1.5 ms,55)};
+\legend{Fixed PDR, Control-aware}
+\end{axis}
+\end{tikzpicture}

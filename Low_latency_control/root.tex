@@ -1,0 +1,167 @@
+%\documentclass[12pt, draftclsnofoot, onecolumn]{IEEEtran}
+\documentclass[journal]{IEEEtran}
+\usepackage{etex}
+\reserveinserts{100}
+%\usepackage{spconf}
+\usepackage{mathtools}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{graphics, theorem, times, amsfonts, graphicx, amssymb, cite}
+\usepackage[outdir=./]{epstopdf}
+\usepackage{tikz}
+%\usepackage{fix2col}
+\usetikzlibrary{shapes,arrows}
+\usetikzlibrary{matrix} % for block alignment
+\usetikzlibrary{decorations.markings} % for arrow heads
+\usetikzlibrary{calc} % for manimulation of coordinates
+\usetikzlibrary{decorations.pathmorphing,snakes, positioning, decorations.pathreplacing}
+
+\usetikzlibrary{fit}
+%\input{figures/tikh_styles}
+\usepackage{pgfplots}
+\usepackage{color}
+\usepackage{setspace}
+\usepackage{hyperref}
+\usepackage{multirow}
+\usepackage{rotating}
+\usepackage{comment}
+%\usepackage{flushend}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[affil-it]{authblk}
+\usepackage{bm}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{enumerate}
+\usepackage{morefloats}
+\usepackage{setspace}
+
+\input{mysymbol.sty}
+\input{my_sections}
+\input{TikZGallery-master/Sty/TikZGallery-Preamble}
+%\renewcommand{\baselinestretch}{.995}
+\newcommand{\QED}{\hfill\ensuremath{\blacksquare}}
+\newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
+
+\def \vneg {\vspace{-2cm}}
+
+\def\whp{\text{w.h.p}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\supp{\text{support}}
+\def\Tr{\text{Tr}}
+
+\def\keywords{
+{\bfseries\textit{Index Terms}---\,\relax%
+}}
+\def\endkeywords{\par}
+
+%\addtolength{\textwidth}{10mm}
+%\addtolength{\evensidemargin}{-5mm}
+%\addtolength{\oddsidemargin}{-5mm}
+%\addtolength{\textheight}{10mm}
+%\addtolength{\topmargin}{-5mm}
+
+%\renewcommand \blue[1]{}  \renewcommand \red[1]{}
+
+\newtheorem{assumption}{\hspace{0pt}\bf Assumption}
+\newtheorem{lemma}{\hspace{0pt}\bf Lemma}
+\newtheorem{proposition}{\hspace{0pt}\bf Proposition}
+\newtheorem{example}{\hspace{0pt}\bf Example}
+\newtheorem{observation}{\hspace{0pt}\bf Observation}
+\newtheorem{theorem}{\hspace{0pt}\bf Theorem}
+\newtheorem{corollary}{\hspace{0pt}\bf Corollary}
+\newtheorem{fact}{\hspace{0pt}\bf Fact}
+\newtheorem{remark}{\hspace{0pt}\bf Remark}
+\newtheorem{test}{\hspace{0pt}\it Test Case}
+\newtheorem{definition}{\hspace{0pt}\bf Definition}
+\newtheorem{conj}{\hspace{0pt}\bf Conjecture}
+\newtheorem{method}{\hspace{0pt}\bf Method}
+
+
+% Title.
+% ------
+
+\title{Control Aware Radio Resource Allocation in Low Latency Wireless Control Systems}
+%
+% Single address.
+% ---------------
+
+\author{Mark Eisen$^*$ \quad Mohammad M. Rashid$^\dagger$ \quad Konstantinos Gatsis$^*$ \\ \textup{Dave Cavalcanti$^\dagger$\quad Nageen Himayat$^{\dagger}$ \quad Alejandro Ribeiro$^*$}
+\thanks{Supported by the Intel Science and Technology Center for Wireless Autonomous Systems. The authors are with the ($^*$)Department of Electrical and Systems Engineering, University of Pennsylvania and ($^\dagger$)Wireless Communications Research, Intel Corporation. Email: maeisen@seas.upenn.edu, mamun.rashid@intel.com, kgatsis@seas.upenn.edu, dave.cavalcanti@intel.com, nageen.himayat@intel.com, aribeiro@seas.upenn.edu.}}
+
+\begin{document}
+
+\thispagestyle{empty}
+\maketitle
+
+%
+\begin{abstract}
+%We consider the problem of allocating radio resources, such as frequency, bandwidth, data rates and time slots, over wireless communication links to control a series of independent wireless control systems. Low-latency transmissions are necessary in control systems that contain high sampling rates, thus necessitating fast transmissions. Compared to wired links, wireless links are highly susceptible to communication errors arising from channel noise and interference. Achieving fast data rates over wireless links thus comes at the cost of reliability in the form of high packet error rates. However, the effect of the communication link errors on the control system performance is not static but depends dynamically on the control system state. Traditional resource allocation methods over wireless links are unaware of control system states and thus are designed with static link error performance, which could be very inefficient if  error performance assumption is too conservative (e.g. too low error rate target), or unacceptably unreliable if the assumption is too relaxed. In this paper, we propose a novel control-communication co-design approach to this low-latency resource allocation problem. We develop methods that incorporate control state information to make scheduling decisions over time on frequency, bandwidth and data rates across the next-generation Wi-Fi based wireless communication links connecting the different components of the control systems. Control systems that are closer to instability or further from a desired range in a given control cycle are given priority in the scheduling. Rather than a simple priority ranking, we derive precise packet error rate targets for each system needed to satisfy respective Lyapunov control targets and make scheduling decisions to best meet targets while minimizing total transmission time. The resulting Control-Aware Low Latency Scheduling (CALLS) method is tested in numerous simulation experiments that demonstrate its effectiveness in meeting control-based goals under tight latency constraints relative to control-agnostic scheduling.
+We consider the problem of allocating radio resources over wireless communication links to control a series of independent wireless control systems. Low-latency transmissions are necessary in enabling time-sensitive control systems to operate over wireless links with high reliability. Achieving fast data rates over wireless links thus comes at the cost of reliability in the form of high packet error rates compared to wired links due to channel noise and interference.  However, the effect of the communication link errors on the control system performance depends dynamically on the control system state. We propose a novel control-communication co-design approach to the low-latency resource allocation problem. We incorporate control and channel state information to make scheduling decisions over time on frequency, bandwidth and data rates across the next-generation Wi-Fi based wireless communication links that close the control loops.  Control systems that are closer to instability or further from a desired range in a given control cycle are given higher packet delivery rate targets to meet. Rather than a simple priority ranking, we derive precise packet error rate targets for each system needed to satisfy stability targets and make scheduling decisions to meet such targets while reducing total transmission time. The resulting Control-Aware Low Latency Scheduling (CALLS) method is tested in numerous simulation experiments that demonstrate its effectiveness in meeting control-based goals under tight latency constraints relative to control-agnostic scheduling.
+
+\end{abstract}
+%
+
+\begin{keywords}
+wireless control, low-latency, codesign, IEEE 802.11ax
+\end{keywords}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% S E C T I O N %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}\label{sec_intro}
+\input{introduction.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% S E C T I O N %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Wireless Control Sysyem}\label{sec_problem_formulation}
+\input{problem_formulation.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% S E C T I O N %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Optimal Control Aware Scheduling}\label{sec_optimal}
+\input{optimal_scheduling.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% S E C T I O N %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Control-Aware Low-Latency Scheduling (CALLS)}\label{sec_calls}
+\input{scheduling_alg.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% S E C T I O N %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Simulation Results}\label{sec_simulation}
+\input{simulations.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%% S E C T I O N %%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion and Conclusions}\label{sec_conclusion}
+\input{conclusions.tex}
+
+
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\urlstyle{same}
+\bibliographystyle{IEEEtran}
+\bibliography{wireless_ll_control,scheduling_control}
+
+
+\end{document} 

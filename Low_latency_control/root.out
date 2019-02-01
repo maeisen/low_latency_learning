@@ -1,0 +1,15 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Wireless Control Sysyem}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{IEEE 802.11ax communication model}{section.2}% 3
+\BOOKMARK [1][-]{section.3}{Optimal Control Aware Scheduling}{}% 4
+\BOOKMARK [2][-]{subsection.3.1}{Latency-constrained scheduling}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.2}{Control-constrained scheduling}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{Control-Aware Low-Latency Scheduling \(CALLS\)}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{Control-based dynamic PDR}{section.4}% 8
+\BOOKMARK [2][-]{subsection.4.2}{Selective scheduling}{section.4}% 9
+\BOOKMARK [2][-]{subsection.4.3}{Assignment-based scheduling}{section.4}% 10
+\BOOKMARK [1][-]{section.5}{Simulation Results}{}% 11
+\BOOKMARK [2][-]{subsection.5.1}{Inverted pendulum system}{section.5}% 12
+\BOOKMARK [2][-]{subsection.5.2}{Balancing board ball system}{section.5}% 13
+\BOOKMARK [1][-]{section.6}{Discussion and Conclusions}{}% 14
+\BOOKMARK [1][-]{section*.12}{References}{}% 15

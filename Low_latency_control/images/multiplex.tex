@@ -1,0 +1,22 @@
+\begin{tikzpicture}
+\draw[step=.5cm,gray,thick] (-2,-2) grid (3,2);
+\node (u1) at (-2,-2) {};
+\draw [ultra thick, draw=black, fill=black!20!white] (-2,-2) rectangle  (0,0);
+\node (u2) at (-2,0) {};
+\draw [ultra thick, draw=black, fill=red!20!white] (-2,0)  rectangle  (0,1);
+\draw [
+    thick,
+    decoration={
+        brace,
+        raise=0.1cm
+    },
+    decorate
+] (u1.west) -- (u2.west) 
+node [pos=0.5,anchor=north,rotate=90,yshift=.7cm] {RU};
+\draw [ultra thick, draw=black, fill=blue!20!white] (-2,1)  rectangle  (0,2);
+\draw [ultra thick, draw=black, fill=green!20!white] (0,-2) rectangle (1,2);
+\draw [ultra thick, draw=black, fill=cyan!20!white] (1,-2)  rectangle  (3,0);
+\draw [ultra thick, draw=black, fill=magenta!20!white] (1,0)  rectangle  (3,2);
+\node[align=center, scale =0.9] at (0,-2.5) {Transmission time};
+%\node[rotate=90] at (-2.5,0) {Resource units (RU)};
+\end{tikzpicture}
