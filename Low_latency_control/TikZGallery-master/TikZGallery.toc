@@ -1,0 +1,7 @@
+\babel@toc {british}{}
+\babel@toc {british}{}
+\contentsline {section}{\numberline {1}Introduction}{4}{section.1}
+\contentsline {section}{\numberline {2}PGF and \textbf {\texttt {\leavevmode {\color {Maroon}Ti\emph {k}Z}}}{}}{5}{section.2}
+\contentsline {section}{\numberline {3}Pgfplots}{6}{section.3}
+\contentsline {section}{\numberline {4}PGF/\textbf {\texttt {\leavevmode {\color {Maroon}Ti\emph {k}Z}}}{} + Gnuplot}{7}{section.4}
+\contentsline {section}{\numberline {5}R and PGF/\textbf {\texttt {\leavevmode {\color {Maroon}Ti\emph {k}Z}}}{}}{8}{section.5}

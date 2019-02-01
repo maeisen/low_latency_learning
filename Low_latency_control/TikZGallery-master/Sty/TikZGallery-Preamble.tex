@@ -1,0 +1,300 @@
+%% -*- Mode: LaTeX; tab-width: 4;
+
+%% TikZGallery-Preamble.tex    TikZ Gallery Preamble
+%% Preamble part of the main document. It could be obsoleted later and replaced by
+%% style file.
+%% MAIN FILE: ../TikZGallery.tex
+%% Created by Dazhi Jiang, 2012-11-11 07:38:07 +0800 (Sun, 11 Nov 2012)
+%% Copyright (c) 2012 Dazhi Jiang. All Rights Reserved. 
+
+%% TextMate Settings
+%!TEX root = ../TikZGallery.tex
+
+% \AtBeginDocument{%
+% \PassOptionsToPackage{sloped}{fourier}
+% \usepackage{fourier}
+% }
+
+\gdef\realauthorname{Khaos}
+
+% \usepackage[british]{babel}
+
+\usepackage{lipsum}
+
+\usepackage{tkz-euclide,tkz-fct}
+\usetkzobj{all} 
+%\tkzSetUpColors[background=fondpaille,text=Maroon]
+
+% \usepackage{amsmath}
+% \usepackage{amsfonts}
+% \usepackage{mathrsfs}
+\usepackage{fixmath}
+\usepackage{esvect}
+% \usepackage{vector}
+\usepackage{mathtools}
+% \usepackage{bm}
+
+\usepackage{siunitx}
+
+\usepackage{url}
+\def\UrlFont{\small\ttfamily}
+\usepackage[protrusion = true,
+            expansion,
+            final,
+            verbose = false,
+            babel   = true]{microtype}
+
+\DisableLigatures{encoding = T1, family = tt*}
+%\usepackage[parfill]{parskip}
+
+\usepackage{shortvrb,fancyvrb} 
+\usepackage[british]{babel}
+\usepackage[autolanguage]{numprint}
+
+\usepackage{ifthen}
+
+% \usepackage[pages=some,firstpage=true]{background}
+% \usepackage[firstpage=true]{background}
+\usepackage{tkzexample}
+% \usepackage[saved]{tkzexample}
+% \def\tkzFileSavedPrefix{TikZGallery}%
+
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+
+
+\gdef\nameofpack{The \TIKZ{} Gallery}
+\gdef\versionofpack{0.0.1.0}
+\gdef\dateofpack{2012/11/10}
+\gdef\nameofdoc{tikzgallery}
+\gdef\versionofdoc{0.01 a}   
+\gdef\dateofdoc{2012/11/10}
+\gdef\authorofpack{\realauthorname}
+\gdef\adressofauthor{}
+% \gdef\namecollection{Notes on \TIKZ{}}
+\gdef\namecollection{Notes on Ti\emph{k}Z}
+% \gdef\urlauthor{http://khaos.github.com}
+% \gdef\urlauthorcom{http://khaos.github.com/TikZGallery}
+\gdef\urlauthor{http://khaos.github.com/TikZGallery}
+\gdef\urlauthorcom{}
+\gdef\authoremail{mailto:jiangdzh@gmail.com}
+%\title{The \TIKZ{} Gallary}
+%\author{\realauthorname}
+
+\usetikzlibrary{circuits,%
+	circuits.logic,%
+	intersections,%
+	scopes, arrows, fadings, patterns,%
+	decorations.pathreplacing,%
+	decorations.pathmorphing,%
+	positioning,
+	shadows,
+	shadings,%
+	shapes.misc,%
+	shapes.geometric,%
+	external,
+	calc,
+	mindmap,
+	chains,
+}
+
+
+\makeatletter
+\renewcommand*\l@subsubsection{\bprot@dottedtocline{3}{3.8em}{4em}}
+
+%<---------------------------------  Couverture ---------------------------->
+%<---------------------------------  Make Title ---------------------------->
+\@ifundefined{pgfnotitlebgtrue}{\newif\ifpgfnotitlebg}{}
+
+% \backgroundsetup{contents={}}
+
+%\renewcommand\maketitle{%
+%\begin{tikzpicture}[remember picture, overlay]
+%	
+%	%% * Background colour
+%	\fill [Peach!10] (current page.south west) rectangle (current page.north east);
+%	
+%	%% * Sidebar
+%	\node [fill = Mahogany, %
+%		   anchor = north west, %
+%		   minimum height = 40mm, %
+%		   minimum width = \paperheight, %
+%		   align = flush right, %
+%		   % inner xsep = 20mm, %
+%		   text width=\paperheight-40mm, %
+%		   rotate = 90 %
+%		   ] 
+%		at ($(current page.south west) + (0mm,0)$)
+%		{\fontsize{60}{60}\color{orange!50!white}%
+%		\bfseries \selectfont{\@title\ \versionofpack}};
+%	
+%	%% * Title
+%	\node[Mahogany,above,inner sep=0pt] 
+%		at ($(current page.south west) + (120mm,250mm)$) 
+%		{\global\setbox\tkzbox=\hbox{\fontsize{60}{60}\selectfont{\namecollection}}\copy\tkzbox};
+%	\node[above,yscale=-1,inner sep=0pt,xslant=1.5,Peach!60] 
+%		at ($(current page.south west) + (120mm,250mm)$) 
+%		{\box\tkzbox};
+%	
+%	%% * Outline mindmap
+%	\path[mindmap, concept color=green!51!blue!40!red!90!red, text=orange!70!white, text width=4cm]
+%	node[concept] 
+%		at ($(current page.south west) + (130mm,155mm)$)
+%		{The Ti\emph{k}Z Gallery}
+%		[clockwise from=0]
+%		child[concept color=green!51!blue!40!red!90!red!90!orange, text width=3cm] {
+%        	node[concept]
+%				{\hyperref[sec:introduction]{{\textcolor{orange!40!white}{Introduction}}}}
+%		}
+%		child[concept color=green!51!blue!40!red!90!red!80!orange, text width=3cm] {
+%			node[concept]
+%				{\hyperref[sec:pgf_and_tikz]{{\textcolor{orange!40!white}{PGF and Ti\emph{k}Z}}}}
+%		}
+%		child[concept color=green!51!blue!40!red!90!red!70!orange, text width=3cm] {
+%			node[concept]
+%				{\hyperref[sec:pgfplots]{{\textcolor{orange!40!white}{Pgfplots}}}}
+%		}
+%		child[concept color=green!51!blue!40!red!90!red!60!orange, text width=3cm] {
+%			node[concept]
+%				{\hyperref[sec:pgf_tikz_gnuplot]{{\textcolor{orange!40!white}{PGF/Ti\emph{k}Z+Gnuplot}}}}
+%		}
+%		child[concept color=green!51!blue!40!red!90!red!50!orange, text width=3cm] {
+%			node[concept]
+%				{\hyperref[sec:r_and_pgf_tikz]{{\textcolor{orange!40!white}{R and PGF/Ti\emph{k}Z}}}}
+%	};
+%	
+%	
+%	%% * Author
+%	\node [align = flush left, anchor=north west, inner sep=0] 
+%		at ($(current page.south west) + (130mm,40mm)$)
+%		{\fontsize{17}{21}
+%		 \textcolor{Mahogany}{\selectfont{\authorofpack}}};
+%	\node [align = flush left, anchor=north west, inner sep=0] 
+%		at ($(current page.south west) + (130mm,30mm)$)
+%		{\textcolor{Mahogany}{\today}};
+%	\node [align = flush left, anchor=north west, inner sep=0] 
+%		at ($(current page.south west) + (130mm,20mm)$)
+%		{\url{\urlauthor} \ \url{\urlauthorcom}};
+%% \put(130,20){\makebox(0,0)[l]{%
+%% \textcolor{Mahogany}{\url{\urlauthor} \ \url{\urlauthorcom}}}}
+%% \put(130,30){\makebox(0,0)[l]{\textcolor{Mahogany}{\today}}}
+%	
+%\end{tikzpicture}
+%}
+
+% \ifpgfnotitlebg
+% 	\renewcommand\maketitle{}
+% \fi
+
+% \renewcommand\maketitle{%
+% \null
+% \AddToShipoutPicture*{%
+% % {
+% \setlength\unitlength{1mm}
+% \put(0,0){\makebox(0,0)[lb]{\color{Peach!10}\rule{\paperwidth}{\paperheight}}}
+% \put(0,0){\makebox(0,0)[lb]{\color{Mahogany}\rule{40mm}{\paperheight}}}
+% \put(20,270){\rotatebox{90}{% 
+% \makebox(0,0)[r]{\fontsize{60}{60}\color{orange!50!white}%
+% \bfseries \selectfont{\@title\ \versionofpack}\hfill}}}%
+%     \put(60,80){%
+%     \begin{pgfpicture} 
+% \pgfmathdeclarerandomlist{color}{{Peach}{Orange}{Red}{Brown}} 
+% \foreach \a in {1,...,5}{% 
+%   \pgfmathrandominteger{\x}{1}{300} 
+%   \pgfmathrandominteger{\y}{1}{200} 
+%   \pgfmathrandominteger{\r}{20}{100} 
+%   \pgfmathrandominteger{\s}{5}{95} 
+%   \pgfmathrandominteger{\o}{50}{80}
+%   \pgfmathrandomitem{\c}{color} 
+%   \pgfdeclareradialshading{ballshading}{\pgfpoint{-10bp}{10bp}} 
+%   {color(0bp)=(\c!15!white); color(9bp)=(\c!75!white); 
+%    color(18bp)=(\c!70!black); color(25bp)=(\c!50!black); color(50bp)=(black)}
+%   \pgfsetfillopacity{\o/100} 
+%   \pgfpathcircle{\pgfpoint{+\x pt}{+\y pt}}{+\r pt} 
+%   \pgfshadepath{ballshading}{\s} 
+%   \pgfusepath{}
+% }%
+% \end{pgfpicture}}
+% \put(60,250){\makebox(0,0)[l]{%
+% \begin{tikzpicture}
+% \nodeshadowedone(2,-1.25){\fontsize{60}{60}\selectfont{\namecollection}};
+% \end{tikzpicture}
+% }}%
+% \put(130,40){\makebox(0,0)[l]{%
+% \fontsize{17}{21}
+% \textcolor{Mahogany}{\selectfont{\authorofpack}}}} 
+% \put(130,20){\makebox(0,0)[l]{%
+% \textcolor{Mahogany}{\url{\urlauthor} \ \url{\urlauthorcom}}}}
+% \put(130,30){\makebox(0,0)[l]{\textcolor{Mahogany}{\today}}}
+% }
+% %<----------------------------- End   Couverture ---------------------------->
+% \setcounter{footnote}{0}%
+% \ClearShipoutPictureBG
+% }
+
+%%<--------------------------- presentation ---------------------------------->
+%% \providecommand\href[2]{\texttt{#1}}
+%
+%\renewcommand*\presentation{%
+%  \thispagestyle{empty}%
+% \par\vspace*{3 cm}
+%     \begin{center}
+%     	{\Huge \@nameoffile}
+%     \end{center}   
+%    \par\vspace*{3 cm}
+%    \noindent
+%  \newlength{\@lx}\settowidth{\@lx}{\huge \namecollection}%
+%  \advance\@lx3em\quad
+%  \href{\urlauthor}{%
+%    \rotatebox{90}{\hspace*{1.5em}{\huge \namecollection}}}
+%  \textcolor{Mahogany}{\rule{2pt}{\@lx}}\quad%
+%  \begin{minipage}[b]{.90\textwidth}
+%    {%
+%    \noindent\hfill
+%     \raggedleft\Large
+%     \href{\authoremail}{\textcolor{blue}{\authorofpack}}\par
+%     }%
+%     \emph{\@defoffile}\par
+%    %[\nameofdoc\ \dateofdoc]\par\medskip
+%  \end{minipage}
+%}
+%%<---------------------- end  presentation ---------------------------------->
+
+\newcommand{\setpgfexternalmainfile}[1]{%
+	% \usepgfplotslibrary{external}
+	\tikzexternalize[
+		prefix=Figs/pdf/pgf-,
+		export=false, % needs to be activated for single pictures (i.e. expensive ones)
+		mode=list and make,
+		verbose IO=false,
+		%xport=true,% FASTER FOR DEBUGGING
+	]{#1}
+	\tikzifexternalizing{%
+		\nofiles
+	}{}%
+	% \tikzset{external/up to date check=simple}
+}%
+
+\makeatother
+
+%\setpgfexternalmainfile{TikZGallery}
+
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+%% !!! Use double backslash here
+\tikzset{external/system call={pdflatex \tikzexternalcheckshellescape -halt-on-error -interaction=batchmode -jobname "\image" "\\newif\\ifpgfnotitlebg\\pgfnotitlebgtrue\\input{\texsource}"}}
+
+%\AtBeginDocument{\MakeShortVerb{\|}}
+%\pdfcompresslevel=9    
+%\pdfinfo{/Title (TikZGallery.pdf)
+%         /Creator (TeX)
+%         /Producer (pdfeTeX)
+%         /Author (\realauthorname)
+%         /CreationDate (12 November  2012) 
+%         /Subject (Documentation of the TikZ gallery)
+%         /Keywords (tikz, pgf, pgfplots, gnuplot, R, pdfeTeX, graphics,
+%                   pdflatex)}
+%\newcommand*{\E}{\ensuremath{\mathrm{e}}
+%}
