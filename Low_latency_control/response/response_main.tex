@@ -100,25 +100,25 @@ We thank the associate editor and the reviewers for the time and effort invested
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \reviewer
 
-\red{We thank the reviewer for the comments, feedback, and questions. The reviewer raised thoughtful questions about the modeling of the problem and some of the assumptions made in the paper. The reviewer also suggests to make the numerical results more thorough. Each concern is addressed individually below:}
+We thank the reviewer for the comments, feedback, and questions. The reviewer raised concerns about the placement of the work within the URLL control and communication framework and literature. The reviewer also brings up points of clarification regarding the problem formulation. Each concern is addressed individually below.
 
 \issue{ The authors need to recast the framework within ultra-reliable and low-latency control and communication.}
 \answer{\red{To be written}}
 
 \issue{ It was unclear whether the focus is on communication for a given control or the other way around. Taht is currently it looks like the solution is based on sequential design.}
-\answer{\red{To be written}}
+\answer{We thank the reviewer for brining up this point of clarification. The focus of this work is designing a scheduling protocol for a given system and control. As such, the control is assumed to be given, or chosen agnostic to the communication, while the communication is designed relative to both the system dynamics and choice of control. \blue{We have added a sentence to Section II to clarfiy this point.} }
 
 \issue{ The article would improve a lot if specific use cases are defined.}
 \answer{\red{To be written}}
 
 \issue{ Linear control was adopted (for tractability) but clearly the nonlinearity is needed}
-\answer{\red{To be written}}
+\answer{The reviewer brings up a reasonable point about the formulation of the wireless control problem. Indeed, many practical systems feature both nonlinear dynamics and potentially non-linear controls. As stated, the proposed approach focuses on linear systems and controls so that we may derive analytic expressions for the control-aware adaptive packet delivery rates. In practice, nonlinear systems may be linearized for the purposes of obtaining such packet delivery rate targets in (23) and performing the proposed CALLS method as written. \blue{To demonstrate how this may be done, in the revised manuscript we have included additional simulations in Section VI in which we control a non-linear system using the CALLS method to schedule plant communications. In these simulations, while the actual dynamics and control being applied are nonlinear in nature, a linearization of the dynamics is used solely to derive the necessary PDR targets as in expression (23). Here, we demonstrate that the proposed method is applicable even in nonlinear systems.}   }
 
 \issue{Reliability as not addressed however it is intertwined with latency}
 \answer{\red{To be written}}
 
 \issue{Authors did not cite recent and fundamental articles within URLLC:}
-\answer{\red{To be written}}
+\answer{We thank the reviewer for pointing out these references. They have been added to the revised manuscript, as well as \blue{ included in an added discussion of URLLC in the introduction (Section I).} }
 
 
 
@@ -128,10 +128,10 @@ We thank the associate editor and the reviewers for the time and effort invested
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \reviewer
 
-\red{We thank the reviewer for the comments, feedback, and questions. The reviewer raised thoughtful questions about the modeling of the problem and some of the assumptions made in the paper. The reviewer also suggests to make the numerical results more thorough. Each concern is addressed individually below:}
+We thank the reviewer for the comments, feedback, and questions. The reviewer raised concerns about the readability of the abstract and made some suggestions regarding the simulation results. Each concern is addressed individually below:
 
 \issue{ Currently, it is not easy to follow the abstract. It should be revised. The contributions of the this paper should be highlighted.}
-\answer{\red{To be written}}
+\answer{We thank the reviewer for raising this point. \blue{We have revised the abstract in the manuscript to be more clear and the highlight the specific contributions of the paper.}}
 
 \issue{  In simulation part, it would be great if the authors could compare the proposed CALLS method with other methods if possible, since there are also some papers discussing communication resource allocation for multiple control loops.}
 \answer{\red{To be written}}
@@ -142,13 +142,13 @@ We thank the associate editor and the reviewers for the time and effort invested
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \reviewer
 
-\red{We thank the reviewer for the comments, feedback, and questions. The reviewer raised thoughtful questions about the modeling of the problem and some of the assumptions made in the paper. The reviewer also suggests to make the numerical results more thorough. Each concern is addressed individually below:}
+We thank the reviewer for the comments, feedback, and questions. The reviewer raised points of clarification regarding the system setup and proposed additional comparisons to be made in the simulation results. Each concern is addressed individually below:
 
 \issue{ Why do you only consider the AWGN channels?  How will your scheme performance when considering fading channels? Is the fading channel also a typical scenario for WiFi based in-door wireless control system?  }
-\answer{\red{To be written}}
+\answer{We thank the reviewer for raising this point, as this aspect of the model is poorly worded in the previous version of the manuscript. We do indeed consider a fading channel to model the wireless channel conditions (specifically, IEEE Channel Model E). In our simulations, we use AWGN curves to evaluate packet error probabilities, but the curves are evaluated at the complete SNR values, which take into account the instantaneous fast fading channel conditions. In addition, we point out that IEEE Channel Model E is the current standard for measuring channel conditions in an indoor environment. More sophisticated models may be developed, but are outside the scope of this work. \blue{We have revised the manuscript to clarify these points regarding the wireless channel model.}}
 
 \issue{In your system, how do you obtain accurate channel state information? E.g. for AWGN channels, you need to test the noise variance. Is your scheme sensitive to channel estimation errors?}
-\answer{\red{To be written}}
+\answer{This is a good point raised by the reviewer. \red{To be written.}}
 
 \issue{The proposed system shall be compared to more existed typical scheduling scheme employed in control system.}
 \answer{\red{To be written}}
