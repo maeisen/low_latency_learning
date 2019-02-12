@@ -103,7 +103,29 @@ We thank the associate editor and the reviewers for the time and effort invested
 We thank the reviewer for the comments, feedback, and questions. The reviewer raised concerns about the placement of the work within the URLL control and communication framework and literature. The reviewer also brings up points of clarification regarding the problem formulation. Each concern is addressed individually below.
 
 \issue{ The authors need to recast the framework within ultra-reliable and low-latency control and communication.}
-\answer{\red{To be written}}
+\answer{We thank the reviewer for this important comment and suggestion. We have revised the introduction of the manuscript substantially to contextualize the work being done here within the framework of URLLC. In doing so, we have added the following important references on the topic to the disucssion in the introduction.
+\begin{itemize}
+\item M. Weiner, M. Jorgovanovic, A. Sahai, and B. Nikolie, “Design of a
+low-latency, high-reliability wireless communication system for control
+applications,” in Communications (ICC), 2014 IEEE International
+Conference on. IEEE, 2014, pp. 3829–3835.
+\item P. Popovski, J. J. Nielsen, C. Stefanovic, E. de Carvalho, E. Strom,
+K. F. Trillingsgaard, A.-S. Bana, D. M. Kim, R. Kotaba, J. Park et al.,
+“Wireless access for ultra-reliable low-latency communication: Principles
+and building blocks,” IEEE Network, vol. 32, no. 2, pp. 16–23, 2018.
+\item M. Bennis, M. Debbah, and H. V. Poor, “Ultra-reliable and lowlatency
+wireless communication: Tail, risk and scale,” arXiv preprint
+arXiv:1801.01270, 2018.
+\item V. N. Swamy, S. Suri, P. Rigge, M. Weiner, G. Ranade, A. Sahai, and
+B. Nikolic, “Cooperative communication for high-reliability low-latency
+wireless control,” in Communications (ICC), 2015 IEEE International
+Conference on. IEEE, 2015, pp. 4380–4386.
+\item J. J. Nielsen, R. Liu, and P. Popovski, “Ultra-reliable low latency communication
+using interface diversity,” IEEE Transactions on Communications,
+vol. 66, no. 3, pp. 1322–1334, 2018.
+\end{itemize}
+In addition to this more comprehensive review of URLLC techniques, we have the introduction to highlight the fact that our control-aware scheduling approach can be seen as a means of defining an \emph{adaptive}-reliability framework for achieving low-latency communications, in contrast to fixed ultra reliability targets. This adaptive reliability framework considers the particular control system dynamics to determine the reliability necessary to keep all plants in good conditions. Our numerical simulations show how this alternative framework can improve the scale of low-latency wireless control systems by loosening reliability requirements where applicable. 
+}
 
 \issue{ It was unclear whether the focus is on communication for a given control or the other way around. Taht is currently it looks like the solution is based on sequential design.}
 \answer{We thank the reviewer for brining up this point of clarification. The focus of this work is designing a scheduling protocol for a given system and control. As such, the control is assumed to be given, or chosen agnostic to the communication, while the communication is designed relative to both the system dynamics and choice of control. We have added a sentence to Section II to clarify this point. }
@@ -115,10 +137,10 @@ We thank the reviewer for the comments, feedback, and questions. The reviewer ra
 \answer{The reviewer brings up a reasonable point about the formulation of the wireless control problem. Indeed, many practical systems feature both nonlinear dynamics and potentially non-linear controls. As stated, the proposed approach focuses on linear systems and controls so that we may derive analytic expressions for the control-aware adaptive packet delivery rates. In practice, nonlinear systems may be linearized for the purposes of obtaining such packet delivery rate targets in (23) and performing the proposed CALLS method as written. \blue{To demonstrate how this may be done, in the revised manuscript we have included additional simulations in Section VI in which we control a non-linear system using the CALLS method to schedule plant communications. In these simulations, while the actual dynamics and control being applied are nonlinear in nature, a linearization of the dynamics is used solely to derive the necessary PDR targets as in expression (23). Here, we demonstrate that the proposed method is applicable even in nonlinear systems.}   }
 
 \issue{Reliability as not addressed however it is intertwined with latency}
-\answer{This is a good point raised by the reviewer that deserves clarification. Reliability is a key component of a practical system that must be carefully managed in low latency systems. In our work, rather than aim for traditional, communication-based reliability targets, such as $0.999$ packet delivery rates, we consider the fact that the observed performance of a control system is more closely related to a \emph{control}-based reliability metric, such as stability or distance from origin. \blue{As discussed in Section...}, by defining reliability targets with respect to the Lyapunov cost function rather than with respect to a fixed packet delivery rate target, we are able to derive \emph{adaptive} packet delivery rate requirements that change with the current performance of each control system. When a control system is in a safe or stable range, it can remain in good performance with smaller packet delivery rates than a control system in a less desirable region. Thus, the proposed CALLS method aims to achieve reliability of control system performance, in other words an \emph{adaptive reliability}, in contrast to a standard high reliability framework. Such adaptive rates are critical in enabling low-latency transmissions in large-scale wireless settings, as observed our simulations in Section \blue{???}. We point out that the proposed control-adaptive framework is thus presented as an alternative to high reliability scheduling schemes in settings in which the control systems are well-managed and defined, such as in the case of industrial controls.  \blue{We have added a discussion of this to the revised manuscript.}}
+\answer{This is a good point raised by the reviewer that deserves clarification. Reliability is a key component of a practical system that must be carefully managed in low latency systems. In our work, rather than aim for traditional, communication-based reliability targets, such as $0.999$ packet delivery rates, we consider the fact that the observed performance of a control system is more closely related to a \emph{control}-based reliability metric, such as stability or distance from origin. As discussed in Section III and IV, by defining reliability targets with respect to the Lyapunov cost function rather than with respect to a fixed packet delivery rate target, we are able to derive \emph{adaptive} packet delivery rate requirements that change with the current performance of each control system. When a control system is in a safe or stable range, it can remain in good performance with smaller packet delivery rates than a control system in a less desirable region. Thus, the proposed CALLS method aims to achieve reliability of control system performance, in other words an \emph{adaptive reliability}, in contrast to a standard high reliability framework. Such adaptive rates are critical in enabling low-latency transmissions in large-scale wireless settings, as observed our simulations in Section V. We point out that the proposed control-adaptive framework is thus presented as an alternative to high reliability scheduling schemes in settings in which the control systems are well-managed and defined, such as in the case of industrial controls. We have added a discussion of this to the revised manuscript.}
 
 \issue{Authors did not cite recent and fundamental articles within URLLC:}
-\answer{We thank the reviewer for pointing out these references. They have been added to the revised manuscript, as well as \blue{ included in an added discussion of URLLC in the introduction (Section I).} }
+\answer{We thank the reviewer for pointing out these references. They have been added to the revised manuscript, as well as  included in an added discussion of URLLC in the introduction (Section I). The references added are listed in a previous response to this reviewer. }
 
 
 
