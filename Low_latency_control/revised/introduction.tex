@@ -17,7 +17,7 @@ The mechanisms usually examined are either static or dynamic. Typical examples o
 Dynamic schedulers do not rely on a predefined sequence but decide access to the communication medium dynamically at each step. %, for example by dynamically assigning priorities to the competing tasks.
 Initial approaches abstract control performance requirements in the time/frequency domain, e.g., how often a task needs resource access, employing algorithms from real-time scheduling theory~\cite{Branicky_RM, Liu_Real_time_systems}. More recent scheduling approaches often depend on the current control system states, i.e., informally the subsystem with the largest state discrepancy is scheduled to communicate -- see, e.g.,~\cite{Donkers_switched,  Cervin_event_scheduling, mamduhi2014event,shi2011optimal,han2017optimal}.
 %
-Alternatively scheduling can take into account current wireless channel conditions opportunistically to meet target control system reliability requirements~\cite{GatsisEtal15}. \red{None of these approaches, however, are explicitly designed to achieve strong performance it low-latency scenarios, which are critical in modern industrial control and factory settings \cite{brahmi2015deployment,yilmaz2015analysis}.}
+Alternatively scheduling can take into account current wireless channel conditions opportunistically to meet target control system reliability requirements~\cite{GatsisEtal15}. \red{None of these approaches, however, are explicitly designed to achieve strong performance in large scale low-latency systems, which are critical in modern industrial control and factory settings \cite{brahmi2015deployment,yilmaz2015analysis}.}
 
 
 

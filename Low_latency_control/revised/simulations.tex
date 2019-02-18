@@ -32,7 +32,7 @@ We perform an initial set of simulations on the well-studied problem of controll
 \begin{align}\label{eq_control_orig}
 \bbA_i =
 \begin{bmatrix}
-1 & 0 & 0 & 0 \\
+1 & 0.037 & 3.477 & 0.042 \\
 0 & 2.055 & -0.722 & 4.828 \\
 0 & 0.023 & 0.91 & 0.037 \\
 0 & 0.677 & -0.453 & 2.055
@@ -68,7 +68,7 @@ We present in Figure \ref{fig_ip_bar} the final capacity results obtained over a
 \begin{axis}[
     ybar,
     enlargelimits=0.15,
-    legend style={at={(0.5,0.85)},
+    legend style={at={(0.5,0.85),size=\footnotesize},
       anchor=north,legend columns=-1},
     ylabel={\# devices supported},
     symbolic x coords={0.5 ms,1 ms,1.5 ms},
@@ -76,9 +76,10 @@ We present in Figure \ref{fig_ip_bar} the final capacity results obtained over a
     nodes near coords,
     nodes near coords align={vertical},
     ]
-\addplot coordinates {(0.5 ms,9) (1 ms,19) (1.5 ms,36)};
-\addplot coordinates {(0.5 ms,12) (1 ms,28) (1.5 ms,55)};
-\legend{Fixed PDR, CALLS}
+\addplot[blue!40!black,fill=blue!20!white] coordinates {(0.5 ms,9) (1 ms,19) (1.5 ms,36)};
+%\addplot[green!40!black,fill=green!20!white] coordinates {(0.5 ms,9) (1 ms,19) (1.5 ms,36)};
+\addplot[red!40!black,fill=red!20!white] coordinates {(0.5 ms,12) (1 ms,28) (1.5 ms,55)};
+\legend{Fixed PDR,  CALLS}
 \end{axis}
 \end{tikzpicture}
 \caption{Total number of inverted pendulum devices that can be controlled using Fixed-PDR and CALLS scheduling for various latency thresholds.}
@@ -89,6 +90,7 @@ We present in Figure \ref{fig_ip_bar} the final capacity results obtained over a
 
 
 \subsection{Balancing board ball system}
+
 
 We perform another series of experiments on the wireless control of a series of balancing board ball systems developed by Acrome \cite{acrome}. In such a system, a ball is kept on a rectangular board with a single point of stability in the center of the board. Two servo motors underneath the board are used to push the board in the horizontal and vertical directions, with the objective to keep the ball close to the center of the board. The state here reflects the position and velocity in the horizontal and vertical axes, i.e. $\bbx_{i,k} := [x_{i,k}, \dot{x}_{i,k}, y_{i,k}, \dot{y}_{i,k}]$.  The input $\bbu_{i,k} = [v_x, v_y]$ reflects the voltage applied to the horizontal and vertical motors. As before, we apply a zeroth order hold on the continuous dynamics with a state sampling rate of $0.01$ seconds and linearize, thus obtaining the following dynamic system matrices,
 %
@@ -109,15 +111,19 @@ We perform another series of experiments on the wireless control of a series of 
 %
 As before, we compute the control matrix $\bbK$ using standard LQR-control computation.
 
-In Figure \ref{fig_bbb_dist} we show the results of a representative simulation of the control of $m=50$ balancing board ball systems with a latency bound of $\tau_{\max} = 10^{-3}$ seconds. Observe that, in this system, even with a large number of users the CALLS method can keep all systems very close to the center of the board, while the fixed PDR scheduler loses a few of the balls due to the agnosticism of the scheduler.
+\red{
+In the simulations performed with the balancing board system, in addition to making comparisons of the CALLS method to a fixed PDR low latency scheduling scheme, we perform additional comparisons to a standard control-aware scheduling approach---namely, the event-triggered scheduling approach \cite{Cervin_event_scheduling, mamduhi2014event}. In event triggered scheduling, we schedule devices only when its estimated control state goes above some threshold value. When such an event occurs, this device is scheduled with a fixed high reliability PDR using a low-latency assignment based scheduling method. This, in effect, combines the selective scheduling approach of CALLS with fixed high reliability PDR targets commonly used in URLLC.
 
- To dive deeper into the benefits provided by control aware scheduling, we present in Figure \ref{fig_bbb_psr} a histogram of the actual  packet delivery rates each of the devices achieved over the representative simulation. It is interesting to observe that, in the CALLS method, the achieved PDRs are closely concentrated, ranging from 0.3 to 0.44. On the other hand, using a fixed PDR scheduling scheme, the non-variable rates are too strict for the low-latency system to support, and without control-aware scheduling the achieved PDRs range wildly from close to 0 to close to 1. In this case, some devices are able to transmit almost every cycle while others are almost never able to successfully transmit their packets. This suggests that, by using control aware scheduling, we indirectly achieve a sense of fairness across users over the long term. Further note that the PDRs required to keep the balancing board ball stable, e.g. 0.4, are relatively small. This is due to the fact that the balancing board ball features relatively slow moving dynamics, making it easier to control with less frequent transmissions. This is comparison to the inverted pendulum system, in which the pendulums were kept stable with PDRs in the range 0.6-0.75.
+In Figure \ref{fig_bbb_dist} we show the results of a representative simulation of the control of $m=50$ balancing board ball systems with a latency bound of $\tau_{\max} = 10^{-3}$ seconds. Observe that, in this system, even with a large number of users, both the event-triggered scheduling and the CALLS method can keep all systems very close to the center of the board, while the fixed PDR scheduler loses a few of the balls due to the agnosticism of the scheduler.
+
+ To dive deeper into the benefits provided by control aware scheduling, we present in Figure \ref{fig_bbb_psr} a histogram of the actual  packet delivery rates each of the devices achieved over the representative simulation. It is interesting to observe that, in both the event triggered and CALLS method, the achieved PDRs are closely concentrated, ranging from 0.3 to 0.44. On the other hand, using a fixed PDR scheduling scheme, the non-variable rates are too strict for the low-latency system to support, and without control-aware scheduling the achieved PDRs range wildly from close to 0 to close to 1. In this case, some devices are able to transmit almost every cycle while others are almost never able to successfully transmit their packets. This suggests that, by using control aware scheduling, we indirectly achieve a sense of fairness across users over the long term. Further note that the PDRs required to keep the balancing board ball stable, e.g. 0.4, are relatively small. This is due to the fact that the balancing board ball features relatively slow moving dynamics, making it easier to control with less frequent transmissions. This is comparison to the inverted pendulum system, in which the pendulums were kept stable with PDRs in the range 0.6-0.75.
+ }
 
 %%%%
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{../images/bbb_dist.eps}
-\caption{Average ball distance to center for $m=50$ devices using (top) CALLS and (bottom) fixed-PDR scheduling with $\tau_{\max} =1$ ms latency threshold. The proposed control aware scheme keeps all balancing balls close to center, while fixed-PDR scheduling cannot.}
+\caption{Average ball distance to center for $m=50$ devices using (top) CALLS, (middle) event-triggered, and (bottom) fixed-PDR scheduling with $\tau_{\max} =1$ ms latency threshold. The proposed control aware scheme keeps all balancing balls close to center, while fixed-PDR scheduling cannot.}
 \label{fig_bbb_dist}
 \end{figure}
 %%
@@ -126,12 +132,13 @@ In Figure \ref{fig_bbb_dist} we show the results of a representative simulation 
 \begin{figure}
 \centering
 \includegraphics[width=.45\textwidth]{../images/bbb_psr.eps}
-\caption{Histogram of achieved PDRs in $m=50$ balancing board systems (top) CALLS and (bottom) fixed-PDR scheduling with $\tau_{\max} =1$ ms latency threshold. The proposed control aware scheme achieves similar PDRs for all devices, while the control agnostic scheduling results in large variation in packet delivery.}
+\caption{Histogram of achieved PDRs in $m=50$ balancing board systems (top) fixed PDR, (middle) event-triggered, and (bottom) CALLS scheduling with $\tau_{\max} =1$ ms latency threshold. The proposed control aware scheme achieves similar PDRs for all devices, while the control agnostic scheduling results in large variation in packet delivery.}
 \label{fig_bbb_psr}
 \end{figure}
 %%
 
-We present in Figure \ref{fig_bbb_bar} the final capacity results obtained over all the simulations for the balancing board ball system. Observe that proposed approach increases the number of supported devices by factor of 2 relative to the standard fixed PDR approach. The even greater improvement here relative to the inverted pendulum simulations can be attributed to the slower dynamics of the balancing board ball, which allows for even more gains using control-aware PDRs due to the lower PDR requirements of the system.
+\red{
+We present in Figure \ref{fig_bbb_bar} the final capacity results obtained over all the simulations for the balancing board ball system. Observe that proposed approach increases the number of supported devices by factor of 2 relative to the standard fixed PDR approach. The even greater improvement here relative to the inverted pendulum simulations can be attributed to the slower dynamics of the balancing board ball, which allows for even more gains using control-aware PDRs due to the lower PDR requirements of the system. Likewise, the Lyapunov-based adaptive PDR requirements allow for even greater scalability than the more standard event-triggered approach, which can service only 17 and 50 users with 0.5 and 1 ms latency thresholds, respectively.}
 
 
 %%%%%%
@@ -141,7 +148,7 @@ We present in Figure \ref{fig_bbb_bar} the final capacity results obtained over 
 \begin{axis}[
     ybar,
     enlargelimits=0.15,
-    legend style={at={(0.5,0.85)},
+    legend style={at={(0.4,.85),font=\footnotesize},
       anchor=north,legend columns=-1},
     ylabel={\# devices supported},
     symbolic x coords={0.5 ms,1 ms},
@@ -149,12 +156,13 @@ We present in Figure \ref{fig_bbb_bar} the final capacity results obtained over 
     nodes near coords,
     nodes near coords align={vertical},
     ]
-\addplot coordinates {(0.5 ms,9) (1 ms,27)};
-\addplot coordinates {(0.5 ms,25) (1 ms,60)};
-\legend{Fixed PDR, CALLS}
+\addplot[blue!40!black,fill=blue!20!white] coordinates {(0.5 ms,9) (1 ms,27)};
+\addplot[green!40!black,fill=green!20!white] coordinates {(0.5 ms,17) (1 ms,50)};
+\addplot[red!40!black,fill=red!20!white] coordinates {(0.5 ms,25) (1 ms,60)};
+\legend{Fixed PDR, Event-Trigged, CALLS}
 \end{axis}
 \end{tikzpicture}
-\caption{Total number of balancing ball board devices that can be controlled using Fixed-PDR and CALLS scheduling for various latency thresholds.}
+\caption{Total number of balancing ball board devices that can be controlled using Fixed-PDR, Event-Triggered, and CALLS scheduling for various latency thresholds.}
 \label{fig_bbb_bar}
 \end{figure}
 %%%%%%

@@ -200,3 +200,9 @@ By combining these methods with the control-based PDR targets and selective sche
  \begin{remark}\label{remark_latency}\normalfont
  Observe that the CALLS method as outlined in Algorithm \ref{alg_calls} seeks to minimize the total latency of the transmission but does not explicitly prevent latency from exceeding some specific threshold $\tau_{\max}$. In practical systems, this limit may need to be enforced. In such a setting, the CALLS method can be modified so that all devices scheduled in PPDUs whose transmission end after $\tau_{\max}$ seconds do not transmit. 
  \end{remark}
+
+\red{
+ \begin{remark}\label{remark_estimation}\normalfont
+In practical systems, the channel state information $\bbH_k$ is often obtained with some estimation errors, which may impact the channel aware scheduling approach taken here. Observer, however, that the computation of adaptive PDR targets in \eqref{eq_pdr_constraint} does not depend upon channel state information. Thus, the primary component of the CALLS method---namely Steps 3-6 in Algorithm \ref{alg_calls}--- is unaffected by inaccurate channel estimation. Likewise, the assignment method-based scheduling in Step 8 does also not directly depend upon channel information---see the formulation of the assignment problem in \eqref{eq_assignment}. The only component that may be negatively impacted by estimation errors is Step 7, i.e.  the maximum MCS selection in \eqref{eq_mcs_select}. Here, estimation errors may result in the selection of an MCS that cannot meet the target PDR targets.  Such an effect can be mitigated by selecting a more conservative MCS selection to account for channel estimation errors---e.g. transmitting at an MCS $\mu_{i,k}(\bbvarsigma) - 1$ rather than $\mu_{i,k}(\bbvarsigma)$. Such a conservative scheme would tradeoff latency to the benefit of reliability or robustness.
+ \end{remark}
+ }
