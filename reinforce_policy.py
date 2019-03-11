@@ -4,10 +4,6 @@ import math
 import scipy
 import scipy.stats
 import pdb
-import graphtools as gt
-import datatools as dt
-
-
 
 # N is batch size
 # S is state_dim
@@ -239,7 +235,7 @@ class TruncatedGaussianBernoulliDistribution(ProbabilityAction):
 
         mean = tf.nn.sigmoid(mean) * (self.upper_bound - self.lower_bound) + self.lower_bound
         #std = tf.nn.sigmoid(std) * np.sqrt(self.upper_bound - self.lower_bound) + np.sqrt(self.lower_bound)
-        std = tf.nn.sigmoid(std)*2+.1
+        std = tf.nn.sigmoid(std)*1+.1
         p = tf.nn.sigmoid(alpha) *(.99-.01) + .01
 
         rate_action = tf.gather(selected_action, np.array(range(pt1)), axis=1, name='rate')
@@ -342,7 +338,7 @@ def mlp_model(state_dim, action_dim, num_param):
     return state_input, output
 
 
-def mlp_model2(state_dim, action_dim, num_param, layers=[128, 64]):
+def mlp_model2(state_dim, action_dim, num_param, layers=[128, 64, 32]):
     with tf.variable_scope('policy'):
 
         state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
@@ -355,11 +351,42 @@ def mlp_model2(state_dim, action_dim, num_param, layers=[128, 64]):
                 scope='layer'+str(idx))
 
         output = tf.contrib.layers.fully_connected(net,
-            action_dim*num_param,
+            int(action_dim*num_param),
             activation_fn=None,
             scope='output')
 
     return state_input, output
+
+def mlp_model_multi2(state_dim, action_dim, num_param, layers=[32, 16]):
+    def _build_network(input, num_param, scope, layers):
+        with tf.variable_scope(scope):
+            net = input
+            for idx, layer in enumerate(layers):
+                net = tf.contrib.layers.fully_connected(net,
+                    layer,
+                    activation_fn = tf.nn.relu,
+                    scope='layer'+str(idx))
+
+            output = tf.contrib.layers.fully_connected(net,
+                num_param,
+                activation_fn=None,
+                scope='output')
+        return output
+
+    state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
+    param_multiplier = [1, 0.5]
+    output_list = []
+    for i in range(2):
+       # single_input = tf.slice(state_input, [0, i], [-1, 1])
+
+        output = _build_network(state_input, int(action_dim*param_multiplier[i]), "agent" + str(i), layers)
+        output_list.append(output[..., tf.newaxis])
+
+    output_list = tf.concat(output_list, axis=1)
+    output_list = tf.reshape(output_list, [tf.shape(output)[0], -1])
+
+    return state_input, output_list
+
 
 
 class ReinforcePolicy(object):
@@ -426,17 +453,8 @@ class ReinforcePolicy(object):
 
         action = self.dist.get_action(params)
 
-        return action
+        return inputs, action
 
-    def get_action2(self, inputs):
-        fd = {self.state_input: inputs}
-        params = self.sess.run(self.params, feed_dict=fd)
-        if np.sum(np.isnan(params)) > 0:
-            pdb.set_trace()
-
-        action = self.dist.get_action(params)
-
-        return action
 
     def learn(self, inputs, actions, f0, f1):
         """
@@ -461,18 +479,8 @@ class ReinforcePolicy(object):
               self.cost: cost_minus_baseline}
 
         output = self.sess.run(self.output, feed_dict=fd)
-
-        # tvars = tf.trainable_variables()
-        # check = self.sess.run(tvars)
-        # if math.isnan(sum(sum(check[0]))):
-        #     pdb.set_trace()
-
         loss, _ = self.sess.run([self.loss, self.optimize], feed_dict=fd)
 
-        # tvars = tf.trainable_variables()
-        # check = self.sess.run(tvars)
-        # if math.isnan(sum(sum(check[0]))):
-        #     pdb.set_trace()
 
         # gradient ascent step on lambda
         delta_lambd = np.mean(f1, axis=0)
@@ -483,7 +491,7 @@ class ReinforcePolicy(object):
         self.lambd = np.maximum(self.lambd, 0)
 
         # self.lambd_lr *= 0.9997
-        self.lambd_lr *= 0.99995
+        self.lambd_lr *= 0.99997
 
         # TODO: learning rate decrease on lambd
         return loss
@@ -527,57 +535,6 @@ if __name__ == '__main__':
 
     import pdb
     pdb.set_trace()
-
-
-
-
-    # import matplotlib.pyplot as plt
-    # from systems import *
-    # from functools import partial
-
-    # tf.set_random_seed(0)
-    # np.random.seed(0)
-
-    # mu = 2
-    # num_channels = 3
-    # pmax = 10
-
-    # sys = WirelessControlSystem(num_channels=num_channels, pmax=pmax)
-    # policy = ReinforcePolicy(sys.state_dim, sys.action_dim, sys.constraint_dim, model_builder=mlp_model)
-
-    # batch_size = 64
-    # lambd_history = []
-    # f0_history = []
-    # f1_history = []
-    # for k in range(1000):
-    #     h = sys.sample(batch_size)
-    #     actions = policy.get_action(h)
-    #     f0 = sys.f0(h, actions)
-    #     f1 = sys.f1(h, actions)
-
-    #     policy.learn(h, actions, f0, f1)
-
-    #     lambd_history.append(np.asscalar(policy.lambd))
-    #     f0_history.append(np.asscalar(np.mean(f0)))
-    #     f1_history.append(np.asscalar(np.mean(f1)))
-
-    #     print("Iteration " + str(k))
-    #     print("====================")
-    #     print("f0: " + str(np.mean(f0)))
-    #     print("f1: " + str(np.mean(f1)))
-    #     print("lambd: " + str(policy.lambd))
-
-    # plt.plot(lambd_history)
-    # plt.savefig("lambd.png")
-
-    # plt.cla()
-    # plt.plot(f0_history)
-    # plt.savefig("f0.png")
-
-    # plt.cla()
-    # plt.plot(f1_history)
-    # plt.savefig("f1.png")
-
 
 
 

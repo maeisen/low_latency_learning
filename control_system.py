@@ -37,9 +37,9 @@ class ProbabilisticSystem(object):
         samples2 = np.random.normal(0, 1, size=(batch_size, self.control_state_dim))
         return np.hstack((samples,samples2))
 
-    def _exponential_uniform_sample(self, batch_size):
+    def _exponential_uniform_sample(self, batch_size, bound):
         samples = np.random.exponential(self.mu, size=(batch_size, self.channel_state_dim))
-        samples2 = np.random.uniform(-10, 10, size=(batch_size, self.control_state_dim))
+        samples2 = np.random.uniform(-bound, bound, size=(batch_size, self.control_state_dim))
         return np.hstack((samples,samples2))
 
 
@@ -451,8 +451,8 @@ class WirelessSchedulingSystem_LC(ProbabilisticSystem):
         return lhs
 
 class WirelessSchedulingSystem_TD(ProbabilisticSystem):
-    def __init__(self, num_users, p=1, Ao=None, Ac=None, W=None, tmax=0.001, mu=2, S=1, num_rus = 25,num_channels=9, t_max = .001):
-        super().__init__(num_users + num_users*p, 2*num_users, 1)
+    def __init__(self, num_users, p=1, Ao=None, Ac=None, W=None, tmax=0.001, mu=2, S=1, num_channels=9, t_max = .0005, bound = 10, T=1):
+        super().__init__(num_users + num_users*p, 2*num_users, T)
 
         self.channel_state_dim = num_users
         self.control_state_dim = num_users*p
@@ -466,6 +466,8 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
 
         self.to_transmit = 0
 
+        self.bound = bound
+
         self.tx_power = 5
 
         self.p = p
@@ -473,7 +475,6 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         self.pmax = 1
         self.mu = mu
         self.num_users = num_users
-        self.num_rus = num_rus
         self.S = S
         self.num_channels = num_channels
 
@@ -486,14 +487,16 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         self.per_by_snr = T.get('mcs_snr_per_wcl_20B')
 
         if Ac == None:
-            self.Ac = (.95-.35)*np.random.random_sample(num_users)+.35
+            self.Ac = (.9-.6)*np.random.random_sample(num_users)+0.6
+            #self.Ac = 0.8 * np.ones(num_users)
         else:
             if (Ac.shape != (1, num_users)):
                 raise Exception("Ac is not the correct shape")
             self.Ac = Ac
 
         if Ao == None:
-            self.Ao = (1.2-1.01)*np.random.random_sample(num_users)+1.01
+            self.Ao = (1.03-1.001)*np.random.random_sample(num_users)+1.001
+           # self.Ao = 1.01 * np.ones(num_users)
         else:
             if (Ao.shape != (1, num_users)):
                 raise Exception("Ao is not the correct shape")
@@ -508,7 +511,7 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
 
     def sample(self, batch_size):
         #return self._exponential_normal_sample(batch_size)
-        return self._exponential_uniform_sample(batch_size)
+        return self._exponential_uniform_sample(batch_size, self.bound)
 
     def db_to_col(self,snr_value):
         snr_value = np.minimum(snr_value,35)
@@ -537,6 +540,15 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         mcs = np.digitize(rate2,self.rate_by_mcs) 
         return mcs
 
+    def noramlize(self,state):
+        max_value = np.amax(abs(state),axis=1)
+        max_value = np.reshape(max_value,(-1,1))
+        return state / np.tile(max_value,(1,state.shape[1]))
+
+    def sigmoid(self,state):
+        return 1 / (1 + np.exp(-state))
+
+
 
     def f0(self, state, action):
         """
@@ -549,29 +561,37 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
             TYPE: N by 1 matrix of negative total channel capacity
         """
         N = action.shape[0]
+        total_cost = 0
+  
+        if state.ndim < 3:
 
-        rate_action = action[:,0:self.rate_dim]
-        transmit_action = action[:,self.rate_dim:]
+            rate_action = action[:,0:self.rate_dim]
+            transmit_action = action[:,self.rate_dim:]
+            mcs_action = self.rate_to_mcs(rate_action)
+
+
+            channel_state = state[:,0:self.channel_state_dim]
+            control_state = state[:,self.channel_state_dim:]
+            control_state_m = np.reshape(control_state,(N,self.num_users))
+        
+            cost_c = np.square(control_state_m * np.tile(self.Ac,(N,1)))
+            cost_o = np.square(control_state_m * np.tile(self.Ao,(N,1))) 
+
+            snr_state = self.snr_to_db(self.tx_power,channel_state)
+            delivery_rates = transmit_action * self.packet_delivery_rate(snr_state,mcs_action,self.per_by_snr)
+
+            total_cost = delivery_rates * cost_c + (1-delivery_rates) * cost_o
             
 
+        else:
+            T = state.shape[2]
 
-        mcs_action = self.rate_to_mcs(rate_action)
+            control_state = state[:,self.channel_state_dim:,:]
+            control_state_m = np.reshape(control_state,(N,self.num_users,T))
+        
+            cost_c = np.square(control_state_m) 
+            total_cost = np.sum(cost_c,axis=2)
 
-        #pdb.set_trace()
-
-        channel_state = state[:,0:self.channel_state_dim]
-        control_state = state[:,self.channel_state_dim:]
-
-        control_state_m = np.reshape(control_state,(N,self.num_users))
-    
-        cost_c = np.square(control_state_m * np.tile(self.Ac,(N,1)))
-        cost_o = np.square(control_state_m * np.tile(self.Ao,(N,1))) 
-
-
-        snr_state = self.snr_to_db(self.tx_power,channel_state)
-        delivery_rates = transmit_action * self.packet_delivery_rate(snr_state,mcs_action,self.per_by_snr)
-
-        total_cost = delivery_rates * cost_c + (1-delivery_rates) * cost_o
         total_cost = np.sum(total_cost,axis=1)
         return np.reshape(total_cost,(-1,1))
 
@@ -640,14 +660,149 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
             TYPE: N by constrain_dim matrix of power budget violations
         """
 
-        total_time = self.get_time(action)
-        lhs = 1000*(total_time - self.tmax)
-        #lhs = np.zeros((N,self.constraint_dim))
-        #lhs[:,0:self.num_channels] = np.array([np.sum(ru_mat, axis=1) - 0*np.ones((N,self.num_channels))])
+        N = state.shape[0]
+        lhs = np.zeros((N,self.constraint_dim))
 
-        return np.reshape(lhs,(-1,1))
+        for i in np.arange(self.constraint_dim):
+            total_time = self.get_time(action[:,:,i])
+           # lhs = 25000*(total_time - self.tmax)
+            #lhs = np.zeros((N,self.constraint_dim))
 
-    def round_robin(self,state):
+            lhs[:,i] = 1000*(np.asarray(total_time >= self.tmax).astype(int) - 0.05)
+            #lhs[:,0:self.num_channels] = np.array([np.sum(ru_mat, axis=1) - 0*np.ones((N,self.num_channels))])
+
+        return lhs
+
+    
+    def update_system(self, state, action,batch_size, rate_select=0):
+
+
+        rate_action = action[:,0:self.rate_dim]
+        transmit_action = action[:,self.rate_dim:]
+
+        if rate_select:
+            mcs_action = self.rate_to_mcs(rate_action)
+        else:
+            mcs_action = rate_action.astype(int)
+
+        #pdb.set_trace()
+
+        channel_state = state[:,0:self.channel_state_dim]
+        control_state = state[:,self.channel_state_dim:]
+
+        control_state_m = np.reshape(control_state,(batch_size,self.num_users))
+
+        snr_state = self.snr_to_db(self.tx_power,channel_state)
+        delivery_rates = transmit_action * self.packet_delivery_rate(snr_state,mcs_action,self.per_by_snr)
+
+        q = np.random.binomial(1,delivery_rates)
+
+        control_state_c = np.copy(control_state)
+        for i in np.arange(batch_size):
+            control_state_c[i,:] = q[i,:]*(self.Ac*control_state_c[i,:]) + (1-q[i,:])*(self.Ao*control_state_c[i,:])
+
+        channel_state = np.random.exponential(self.mu, size=(batch_size, self.channel_state_dim))
+        control_state_c = np.minimum(np.maximum(control_state_c,-self.bound),self.bound)
+        new_state = np.concatenate([channel_state,control_state_c],axis=1)
+
+        return new_state
+
+    def calls(self,state, tmax=None):
+
+        if tmax==None:
+            tmax = self.tmax
+
+        transmit_action = np.zeros((1,self.num_users))
+        mcs_action = np.ones((1,self.num_users))
+
+        rho = .95
+        q_min = (np.square(self.Ao) - rho) / (np.square(self.Ao) - np.square(self.Ac))
+        q_min = np.maximum(0,np.minimum(q_min,1))
+
+        v = np.exp(q_min-1)
+        p_min = q_min/v
+
+        draws = np.random.binomial(1,v)
+        all_to_transmit = np.random.permutation(np.where(draws)[0])
+        idx = 0
+        num_to_transmit = np.size(all_to_transmit)
+
+        if num_to_transmit > 0:
+        
+            N = state.shape[0]
+            total_time = 0
+
+            channel_state = state[0,0:self.channel_state_dim]
+
+
+
+            snr_state = self.snr_to_db(1,channel_state)
+            col_state = self.db_to_col(snr_state)
+            p2 = 1 - self.per_by_snr[:,col_state]
+
+        
+            max_mcs = np.maximum(np.sum(p2[:,all_to_transmit[idx]]>=p_min[all_to_transmit[idx]]),1)
+            mcs_action[0,all_to_transmit[idx]] = max_mcs
+            time_needed = self.mcs_to_time(max_mcs,self.packet_size)
+            total_time += time_needed
+
+            while (total_time <= tmax) & (np.sum(transmit_action) < num_to_transmit):
+                transmit_action[0,all_to_transmit[idx]] = 1.0
+                idx = (idx + 1)%num_to_transmit
+                max_mcs = np.maximum(np.sum(p2[:,all_to_transmit[idx]]>=p_min[all_to_transmit[idx]]),1)
+                mcs_action[0,all_to_transmit[idx]] = max_mcs
+                time_needed = self.mcs_to_time(max_mcs,self.packet_size)
+                total_time += time_needed
+
+
+        return np.concatenate([mcs_action, transmit_action], axis=1)
+
+    def priority_ranking(self,state,tmax=None):
+
+        if tmax==None:
+            tmax = self.tmax
+
+        p_min = 0.95
+
+        control_state = state[0,self.channel_state_dim:]
+
+        all_to_transmit = np.argsort(-abs(control_state))
+        idx = 0
+        num_to_transmit = np.size(all_to_transmit)
+        
+        N = state.shape[0]
+        total_time = 0
+
+        channel_state = state[0,0:self.channel_state_dim]
+
+        transmit_action = np.zeros((1,self.num_users))
+        mcs_action = np.ones((1,self.num_users))
+
+        snr_state = self.snr_to_db(1,channel_state)
+        col_state = self.db_to_col(snr_state)
+        p2 = 1 - self.per_by_snr[:,col_state]
+
+        
+        max_mcs = np.maximum(np.sum(p2[:,all_to_transmit[idx]]>=p_min),1)
+        mcs_action[0,all_to_transmit[idx]] = max_mcs
+        time_needed = self.mcs_to_time(max_mcs,self.packet_size)
+        total_time += time_needed
+
+        while (total_time <= tmax) & (np.sum(transmit_action) < num_to_transmit):
+            transmit_action[0,all_to_transmit[idx]] = 1.0
+            idx = (idx + 1)%num_to_transmit
+            max_mcs = np.maximum(np.sum(p2[:,all_to_transmit[idx]]>=p_min),1)
+            mcs_action[0,all_to_transmit[idx]] = max_mcs
+            time_needed = self.mcs_to_time(max_mcs,self.packet_size)
+            total_time += time_needed
+
+        return np.concatenate([mcs_action, transmit_action], axis=1)
+
+
+    def round_robin(self,state, tmax=None):
+
+        if tmax==None:
+            tmax = self.tmax
 
         p_min = 0.95
         
@@ -669,7 +824,7 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         time_needed = self.mcs_to_time(max_mcs,self.packet_size)
         total_time += time_needed
 
-        while (total_time <= self.tmax) & (np.sum(transmit_action) < self.num_users):
+        while (total_time <= tmax) & (np.sum(transmit_action) < self.num_users):
             transmit_action[0,self.to_transmit] = 1.0
             self.to_transmit = (self.to_transmit + 1)%self.num_users
             max_mcs = np.maximum(np.sum(p2[:,self.to_transmit]>=p_min),1)

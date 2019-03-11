@@ -1,15 +1,13 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 import matplotlib.pyplot as plt
 import scipy.io
 from scipy import sparse
 
 from control_system import *
-from reinforce_policy import ReinforcePolicy
-from reinforce_policy import *
-import networkx as nwx
-import graphtools as gt
-
+from reinforce_policy_T import ReinforcePolicy
+from reinforce_policy_T import *
 
 #######################
 ## UTILITY FUNCTIONS ##
@@ -24,114 +22,183 @@ def moving_average(data, window=10):
     moving_avg[:window] = cumsum[:window] / window
     return moving_avg
 
-def run_sys(sys, policies, num_iter, num_reruns=1, batch_size=64):
-    history_list = []
-    runtime_list = []
-    num_iters_run = 500
-    for i in range(num_reruns):
-        print("Simulation " + str(i))
+def run_sys(sys, policy, num_iter, batch_size=64):
 
-        history_dict = {}
-        runtime_dict = {}
-
-        for policy_name, _ in policies.items():
-            policy_dict = {'lambd': [],
-                           'f0': [],
-                           'f1': [],
-                           'L': [],
-                           'p': [],
-                           'Ao': [],
-                           'Ac': [],
-                           'x': []}
-            policy_dict2 = {'f0': [],
-                           'f1': [],
-                           'f0_m': [],
-                           'f1_m': [],
-                           'x': [],
-                           'Ao':[],
-                           'Ac':[]}
-            history_dict[policy_name] = policy_dict
-            history_dict[policy_name]['Ao'].append(sys.Ao)
-            history_dict[policy_name]['Ac'].append(sys.Ac)
-            runtime_dict[policy_name] = policy_dict2
-            runtime_dict[policy_name]['Ao'].append(sys.Ao)
-            runtime_dict[policy_name]['Ac'].append(sys.Ac)
-
-        for k in range(num_iter):
-            states = sys.sample(batch_size)
-
-            if k%1000 == 0:
-                print("Iteration " + str(k))
-
-            for policy_name, policy in policies.items():
-                actions = policy.get_action(states)
-                f0 = sys.f0(states, actions)
-                f1 = sys.f1(states, actions)
-                L = f0 + np.dot(f1, policy.lambd)
+    num_iters_run = 1000
 
 
-                history_dict[policy_name]['lambd'].append(policy.lambd)
+    history_dict = {'lambd': [],
+                   'f0': [],
+                   'f1': [],
+                   'p': [],
+                   'Ao': [],
+                   'Ac': [],
+                   'x': []}
+    runtime_dict = {'f0': [],
+                   'f0_2': [],
+                   'f0_3': [],
+                   'f0_4': [],
+                   'p': [],
+                   'p2': [],
+                   'p3': [],
+                   'p4': [],
+                   'T': [],
+                   'x': [],
+                   'x2': [],
+                   'x3': [],
+                   'x4': [],
+                   'Ao':[],
+                   'Ac':[]}
+    runtime_dict2 = {'f0': [],
+                   'f0_2': [],
+                   'f0_3': [],
+                   'f0_4': [],
+                   'p': [],
+                   'p2': [],
+                   'p3': [],
+                   'p4': [],
+                   'T': [],
+                   'x': [],
+                   'x2': [],
+                   'x3': [],
+                   'x4': [],
+                   'Ao':[],
+                   'Ac':[]}
+    history_dict['Ao'].append(sys.Ao)
+    history_dict['Ac'].append(sys.Ac)
+    runtime_dict['Ao'].append(sys.Ao)
+    runtime_dict['Ac'].append(sys.Ac)
+    runtime_dict2['Ao'].append(sys.Ao)
+    runtime_dict2['Ac'].append(sys.Ac)
 
-                history_dict[policy_name]['f0'].append(np.mean(f0))
-                history_dict[policy_name]['f1'].append(np.mean(f1,axis=0))
-                history_dict[policy_name]['L'].append(np.mean(L))
+    ##### TRAIN ###############################################
+    for k in range(num_iter):
+        state0 = sys.sample(batch_size)
 
-                if k%1000 == 0:
-                    #print(actions)
-                    history_dict[policy_name]['x'].append(states)
-                    history_dict[policy_name]['p'].append(actions)
+        if k%1000 == 0:
+            print("Iteration " + str(k))
 
-                policy.learn(states, actions, f0, f1)
+        states, actions = policy.get_action(state0)
+
+        f0 = sys.f0(states, actions)
+        f1 = sys.f1(states, actions)
+        L = f0 + np.dot(f1, policy.lambd)
+
+
+        history_dict['lambd'].append(policy.lambd)
+
+        history_dict['f0'].append(np.mean(f0))
+        history_dict['f1'].append(np.mean(f1,axis=0))
+
+        if k%1000 == 0:
+            #print(actions)
+            history_dict['x'].append(states)
+            history_dict['p'].append(actions)
+
+        policy.learn(states[:,:,0], actions[:,:,0], f0, f1)
+
+    pdb.set_trace()
+
+    ##### RUN ##########################
+    state0 = sys.sample(2)
+    state1 = np.copy(state0)
+    state2 = np.copy(state1)
+    state3 = np.copy(state1)
+    state4 = np.copy(state2)
+    for k in range(num_iters_run):
         
-        for k in range(num_iters_run):
-            states = sys.sample(2)
-            print("Run Iteration " + str(k))
-            
-            for policy_name, policy in policies.items():
-                actions = policy.get_action2(states)
-                actions2 = sys.round_robin(states)
+        print("Run Iteration " + str(k))
+        state0 = sys.sample(2)
+        #state1 = sys.sample(2)
+        #state2 = np.copy(state1)
+        #state3 = np.copy(state1)
+        #state4 = np.copy(state2)
 
-                runtime_dict[policy_name]['f1'].append(actions)
-                runtime_dict[policy_name]['f1_m'].append(actions2)
-                runtime_dict[policy_name]['x'].append(states)
+        actions = policy.get_action(state1)
+        T = sys.get_time(actions)
+        actions2 = sys.round_robin(state2, T[0])
+        actions3 = sys.priority_ranking(state3, T[0])
+        actions4 = sys.calls(state4, T[0])
 
+        f0_1 = sys.f0(state1,actions)
+        f0_2 = sys.f0_m(state2,actions2)
+        f0_3 = sys.f0_m(state3,actions3)
+        f0_4 = sys.f0_m(state4,actions4)
 
-                f0 = sys.f0(states, actions)
-                f0_m = sys.f0_m(states,actions2)
-                f1 = sys.f1(states, actions)
+        runtime_dict['f0'].append(f0_1)
+        runtime_dict['f0_2'].append(f0_2)
+        runtime_dict['f0_3'].append(f0_3)
+        runtime_dict['f0_4'].append(f0_4)
+        runtime_dict['p'].append(actions)
+        runtime_dict['p2'].append(actions2)
+        runtime_dict['p3'].append(actions3)
+        runtime_dict['p4'].append(actions4)
+        runtime_dict['T'].append(T[0])
+        runtime_dict['x'].append(state1)
+        runtime_dict['x2'].append(state2)
+        runtime_dict['x3'].append(state3)
+        runtime_dict['x4'].append(state4)
 
+        state1 = sys.update_system(state1,actions,2,rate_select=True)
+        state2 = sys.update_system(state2,actions2,2,rate_select=False)
+        state3 = sys.update_system(state3,actions3,2,rate_select=False)
+        state4 = sys.update_system(state4,actions4,2,rate_select=False)
 
-                runtime_dict[policy_name]['f0'].append(f0[0,:])
-                runtime_dict[policy_name]['f0_m'].append(f0_m[0,:])
+        actions = policy.get_action(state0)
+        T = sys.get_time(actions)
+        actions2 = sys.round_robin(state0, T[0])
+        actions3 = sys.priority_ranking(state0, T[0])
+        actions4 = sys.calls(state0, T[0])
 
+        f0_1 = sys.f0(state0,actions)
+        f0_2 = sys.f0_m(state0,actions2)
+        f0_3 = sys.f0_m(state0,actions3)
+        f0_4 = sys.f0_m(state0,actions4)
 
-        history_list.append(history_dict)
-        runtime_list.append(runtime_dict)
+        runtime_dict2['f0'].append(f0_1)
+        runtime_dict2['f0_2'].append(f0_2)
+        runtime_dict2['f0_3'].append(f0_3)
+        runtime_dict2['f0_4'].append(f0_4)
+        runtime_dict2['p'].append(actions)
+        runtime_dict2['p2'].append(actions2)
+        runtime_dict2['p3'].append(actions3)
+        runtime_dict2['p4'].append(actions4)
+        runtime_dict2['T'].append(T[0])
+        runtime_dict2['x'].append(state0)
 
-    return history_list, runtime_list
+    return history_dict, runtime_dict, runtime_dict2
 
 def save_data(data, filename):
-    data_dict = {}
-    # plotting variables over time
-    for data_name in ['lambd', 'f0', 'f1', 'L', 'p', 'Ac', 'Ao', 'x']:
-        data_list = []
-        for policy_name, _ in data.items():
-            data_list.append(data[policy_name][data_name])
-        data_list = np.array(data_list)
-        data_dict[data_name] = data_list
-    scipy.io.savemat(filename, data_dict)
+    scipy.io.savemat(filename, data)
 
 def save_rt_data(data, filename):
-    data_dict = {}
-    # plotting variables over time
-    for data_name in ['f0', 'f1', 'f0_m', 'f1_m', 'x','Ao','Ac']:
-        data_list = []
-        for policy_name, _ in data.items():
-            data_list.append(data[policy_name][data_name])
-        data_list = np.array(data_list)
-        data_dict[data_name] = data_list
-    scipy.io.savemat(filename, data_dict)
+    scipy.io.savemat(filename, data)
 
+
+def generate_training_set(sys, num_samples, filename):
+    print("Generation Training Set")
+
+    history_dict = {'f0': [],
+                    'p': [],
+                    'x': [],
+                    'Ao':[],
+                    'Ac':[]}
+    history_dict['Ao'].append(sys.Ao)
+    history_dict['Ac'].append(sys.Ac)
+
+    for k in range(num_samples):
+        states = sys.sample(1)
+
+        if k%10000 == 0:
+            print("Iteration " + str(k))
+
+        actions3 = sys.priority_ranking(states, sys.tmax)
+        f0_3 = sys.f0_m(states,actions3)
+
+        history_dict['f0'].append(f0_3)
+        history_dict['p'].append(actions3)
+        history_dict['x'].append(states)
+    scipy.io.savemat(filename, history_dict)
 
 
 ####################
@@ -142,66 +209,97 @@ def wireless_control_test():
     num_users = 9 # number of wireless channels (action_dim and state_dim)
     num_rus = 9 
 
-    theta_lr = 5e-4
-    lambda_lr = .05
+    theta_lr = 1e-3
+    lambda_lr = .001
 
     sys = WirelessSchedulingSystem_CC(num_users,num_rus=num_rus)
     distribution = ClassificationDistribution2(sys.action_dim,num_rus)
     scheduling_policy = ReinforcePolicy(sys.state_dim, 
         sys.action_dim, 
         sys.constraint_dim,model_builder=mlp_model, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr)
-    policies = {'reinforce': scheduling_policy}
 
-
-    history_dict, runtime_dict = run_sys(sys, policies, 30000,num_reruns=1, batch_size=64)
-    history_dict = history_dict[0]
-    runtime_dict = runtime_dict[0]
+    history_dict, runtime_dict = run_sys(sys, scheduling_policy, 40000,num_reruns=1, batch_size=64)
     save_data(history_dict, "wireless_control_data.mat")
     save_rt_data(runtime_dict, "wireless_control_datab.mat")
-    #plot_data(history_dict, "wireless_control_")
 
-####################
-## TEST FUNCTIONS ##
-####################
+
 def wireless_control_test2():
-    mu = 2 # parameter for exponential distribution of wireless channel distribution
-    num_users = 20 # number of wireless channels (action_dim and state_dim)
-    num_rus = 20 
+    mu = 1 # parameter for exponential distribution of wireless channel distribution
+    num_users = 10 # number of wireless channels (action_dim and state_dim)
+    num_rus = 10 
+    tmax = .0005
 
     lower_bound = 1.6
-    upper_bound = 5.0
+    upper_bound = 8.0
 
     theta_lr = 5e-4
-    lambda_lr = .005
+    lambda_lr = .00001
 
-    sys = WirelessSchedulingSystem_TD(num_users,num_rus=num_rus)
+    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax)
+
+
     distribution = TruncatedGaussianBernoulliDistribution(sys.action_dim,
         lower_bound=lower_bound, 
         upper_bound=upper_bound)
     scheduling_policy = ReinforcePolicy(sys.state_dim, 
         sys.action_dim, 
-        sys.constraint_dim,model_builder=mlp_model, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr)
-    policies = {'reinforce': scheduling_policy}
+        sys.constraint_dim,model_builder=mlp_model2, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr)
+
+    history_dict, runtime_dict, runtime_dict2 = run_sys(sys, scheduling_policy, 40000,batch_size=100)
+
+    save_data(history_dict, "wireless_control_data6.mat")
+    save_rt_data(runtime_dict, "wireless_control_data6b.mat")
+    save_rt_data(runtime_dict2, "wireless_control_data6c.mat")
+
+def wireless_control_test_T():
+    mu = 1 # parameter for exponential distribution of wireless channel distribution
+    num_users = 10 # number of wireless channels (action_dim and state_dim)
+    num_rus = 10 
+    tmax = .0005
+
+    lower_bound = 1.6
+    upper_bound = 8.0
+
+    T = 10
+
+    theta_lr = 5e-4
+    lambda_lr = .00001
+
+    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax, T=T)
 
 
-    history_dict, runtime_dict = run_sys(sys, policies, 20000,num_reruns=1, batch_size=64)
-    history_dict = history_dict[0]
-    runtime_dict = runtime_dict[0]
-    save_data(history_dict, "wireless_control_data1.mat")
-    save_rt_data(runtime_dict, "wireless_control_data1b.mat")
-    #plot_data(history_dict, "wireless_control_")
+    distribution = TruncatedGaussianBernoulliDistribution(sys.action_dim,
+        lower_bound=lower_bound, 
+        upper_bound=upper_bound)
+    scheduling_policy = ReinforcePolicy(sys, model_builder=mlp_model2, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr, T=T)
+
+    history_dict, runtime_dict, runtime_dict2 = run_sys(sys, scheduling_policy, 15000,batch_size=100)
+
+    save_data(history_dict, "wireless_control_data7.mat")
+    save_rt_data(runtime_dict, "wireless_control_data7b.mat")
+    save_rt_data(runtime_dict2, "wireless_control_data7c.mat")
+
+
+def training_set_test():
+    mu = 1 # parameter for exponential distribution of wireless channel distribution
+    num_users = 10 # number of wireless channels (action_dim and state_dim)
+    num_rus = 10 
+    tmax = .0005
+
+    lower_bound = 1.6
+    upper_bound = 8.0
+
+    theta_lr = 7e-5
+    lambda_lr = .001
+
+    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax)
+
+    generate_training_set(sys,1000000,"training_set.mat")
 
 
 
 
 if __name__ == '__main__':
-    # data = np.array([0.16645503916151938, 0.601523896825384, 0.8141793467540994, 1.4449876414838947, 1.0427023417915917, 1.9309799810970443, 2.415899078581715, 2.439764538130838, 4.875788384249898])
-    # plt.plot([5, 10, 15, 20, 25, 30, 35, 40, 45], data)
-    # plt.xlabel('number of channels'64
-    # plt.ylabel('objective gap')
-    # plt.show()
-
-
 
     import argparse
     import sys
@@ -211,28 +309,7 @@ if __name__ == '__main__':
     tf.set_random_seed(rn)
     np.random.seed(rn1)
 
-    wireless_control_test2()
-
-    # parser = argparse.ArgumentParser(description="Constrained Policy Optimization")
-    # parser.add_argument('--type',
-    #     dest='type',
-    #     action='store',
-    #     type=str,
-    #     required=True,
-    #     choices=['wireless_cap', 'wireless_cap2', 'wireless_cap_interference', 'wireless_control'])
-    # args = parser.parse_args(sys.argv[1:])
-
-
-    # if args.type == 'wireless_cap':
-    #     wireless_capacity_test()
-    # elif args.type == 'wireless_cap2':
-    #     wireless_capacity_large_test()
-    # elif args.type == 'wireless_cap3':
-    #     wireless_capacity_test3()
-    # elif args.type == 'wireless_cap_interference':
-    #     wireless_capacity_interference_test()
-    # elif args.type == 'wireless_control':
-    #     wireless_control_test()
-
-
+   # wireless_control_test2()
+    wireless_control_test_T()
+    #training_set_test()
 
