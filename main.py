@@ -22,11 +22,15 @@ def moving_average(data, window=10):
     moving_avg[:window] = cumsum[:window] / window
     return moving_avg
 
-def run_sys(sys, policy, num_iter, batch_size=64):
 
-    num_iters_run = 1000
+#########################################################################
+######################## RUN SIMULATION ################################
+########################################################################
+def run_sys(sys, policy, num_iter_train, num_iter_exec, batch_size=64):
 
 
+
+    # initalize dictionaries for storing training and execution data
     history_dict = {'lambd': [],
                    'f0': [],
                    'f1': [],
@@ -71,48 +75,51 @@ def run_sys(sys, policy, num_iter, batch_size=64):
     runtime_dict2['Ao'].append(sys.Ao)
     runtime_dict2['Ac'].append(sys.Ac)
 
-    ##### TRAIN ###############################################
-    for k in range(num_iter):
+
+    ###########################################################
+    ##### T R A I N I N G #####################################
+    ########################################################3##
+    print("::::::::TRAINING PHASE:::::::")
+    for k in range(num_iter_train):
         state0 = sys.sample(batch_size)
 
         if k%1000 == 0:
             print("Iteration " + str(k))
 
-        states, actions = policy.get_action(state0)
+        states, actions = policy.get_action(state0) # generate policy rollout over time horizon
 
-        f0 = sys.f0(states, actions)
-        f1 = sys.f1(states, actions)
-        L = f0 + np.dot(f1, policy.lambd)
+        f0 = sys.f0(states, actions) # evaluate control cost over rollout
+        f1 = sys.f1(states, actions) # evaluate transmission time over rollout
 
+        history_dict['lambd'].append(policy.lambd)  # store dual parameter
 
-        history_dict['lambd'].append(policy.lambd)
-
-        history_dict['f0'].append(np.mean(f0))
-        history_dict['f1'].append(np.mean(f1,axis=0))
+        history_dict['f0'].append(np.mean(f0)) # store f0
+        history_dict['f1'].append(np.mean(f1,axis=0))  # store f1
 
         if k%1000 == 0:
-            #print(actions)
-            history_dict['x'].append(states)
-            history_dict['p'].append(actions)
+            history_dict['x'].append(states) # store training state
+            history_dict['p'].append(actions) # store training action
 
-        policy.learn(states[:,:,0], actions[:,:,0], f0, f1)
+        policy.learn(states[:,:,0], actions[:,:,0], f0, f1) # perform learning step
 
     pdb.set_trace()
 
-    ##### RUN ##########################
+
+    ###########################################################
+    ##### E X E C U T I O N ###################################
+    ########################################################3##
     state0 = sys.sample(2)
     state1 = np.copy(state0)
     state2 = np.copy(state1)
     state3 = np.copy(state1)
     state4 = np.copy(state2)
-    for k in range(num_iters_run):
+    print("::::::::EXECUTION PHASE:::::::")
+    for k in range(num_iters_exec):
         
-        print("Run Iteration " + str(k))
+        if k%1000 == 0:
+            print("Iteration " + str(k))
         state0 = sys.sample(2)
-        #state1 = sys.sample(2)
-        #state2 = np.copy(state1)
-        #state3 = np.copy(state1)
-        #state4 = np.copy(state2)
+
 
         actions = policy.get_action(state1)
         T = sys.get_time(actions)
@@ -168,9 +175,15 @@ def run_sys(sys, policy, num_iter, batch_size=64):
 
     return history_dict, runtime_dict, runtime_dict2
 
+#############################################
+############ Save training data ###############
+##############################################
 def save_data(data, filename):
     scipy.io.savemat(filename, data)
 
+#############################################
+############ Save execution data ###############
+##############################################
 def save_rt_data(data, filename):
     scipy.io.savemat(filename, data)
 
@@ -204,101 +217,124 @@ def generate_training_set(sys, num_samples, filename):
 ####################
 ## TEST FUNCTIONS ##
 ####################
-def wireless_control_test():
-    mu = 2 # parameter for exponential distribution of wireless channel distribution
-    num_users = 9 # number of wireless channels (action_dim and state_dim)
-    num_rus = 9 
+# def wireless_control_test():
+#     mu = 2 # parameter for exponential distribution of wireless channel distribution
+#     num_users = 9 # number of wireless channels (action_dim and state_dim)
+#     num_rus = 9 
 
-    theta_lr = 1e-3
-    lambda_lr = .001
+#     theta_lr = 1e-3
+#     lambda_lr = .001
 
-    sys = WirelessSchedulingSystem_CC(num_users,num_rus=num_rus)
-    distribution = ClassificationDistribution2(sys.action_dim,num_rus)
-    scheduling_policy = ReinforcePolicy(sys.state_dim, 
-        sys.action_dim, 
-        sys.constraint_dim,model_builder=mlp_model, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr)
+#     sys = WirelessSchedulingSystem_CC(num_users,num_rus=num_rus)
+#     distribution = ClassificationDistribution2(sys.action_dim,num_rus)
+#     scheduling_policy = ReinforcePolicy(sys.state_dim, 
+#         sys.action_dim, 
+#         sys.constraint_dim,model_builder=mlp_model, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr)
 
-    history_dict, runtime_dict = run_sys(sys, scheduling_policy, 40000,num_reruns=1, batch_size=64)
-    save_data(history_dict, "wireless_control_data.mat")
-    save_rt_data(runtime_dict, "wireless_control_datab.mat")
+#     history_dict, runtime_dict = run_sys(sys, scheduling_policy, 40000,num_reruns=1, batch_size=64)
+#     save_data(history_dict, "wireless_control_data.mat")
+#     save_rt_data(runtime_dict, "wireless_control_datab.mat")
 
 
+
+#######################################################################
+#### Test w/o time horizon learning (i.e. instanteous control cost)####
+#######################################################################
 def wireless_control_test2():
     mu = 1 # parameter for exponential distribution of wireless channel distribution
-    num_users = 10 # number of wireless channels (action_dim and state_dim)
-    num_rus = 10 
-    tmax = .0005
 
+    num_users = 10 # number of devices 
+    tmax = .0005  # latenct bound
+
+    # bounds for data rate policy ###
     lower_bound = 1.6
     upper_bound = 8.0
 
+    # time horizon
+    T = 10
+
+    # learning rates
     theta_lr = 5e-4
     lambda_lr = .00001
 
-    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax)
+     # Initialize scheduling system
+    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax, mu=mu)
 
-
+    # Set polict distribution
     distribution = TruncatedGaussianBernoulliDistribution(sys.action_dim,
         lower_bound=lower_bound, 
         upper_bound=upper_bound)
+    # Init policy trainer
     scheduling_policy = ReinforcePolicy(sys.state_dim, 
         sys.action_dim, 
         sys.constraint_dim,model_builder=mlp_model2, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr)
 
-    history_dict, runtime_dict, runtime_dict2 = run_sys(sys, scheduling_policy, 40000,batch_size=100)
+    # Run simulation
+    history_dict, runtime_dict, runtime_dict2 = run_sys(sys, scheduling_policy, num_iter_train = 40000, num_iter_exec = 1000, batch_size=100)
 
-    save_data(history_dict, "wireless_control_data6.mat")
-    save_rt_data(runtime_dict, "wireless_control_data6b.mat")
-    save_rt_data(runtime_dict2, "wireless_control_data6c.mat")
+    save_data(history_dict, "wireless_control_data6.mat") # save training data
+    save_rt_data(runtime_dict, "wireless_control_data6b.mat") # save execution data  (without control system)
+    save_rt_data(runtime_dict2, "wireless_control_data6c.mat") # save execution data (with control system)
 
+
+#######################################################################
+#### Test using time horizon learning (i.e. reinforcement learning)####
+#######################################################################
 def wireless_control_test_T():
     mu = 1 # parameter for exponential distribution of wireless channel distribution
-    num_users = 10 # number of wireless channels (action_dim and state_dim)
-    num_rus = 10 
-    tmax = .0005
 
+    num_users = 10 # number of devices 
+    tmax = .0005  # latenct bound
+
+    # bounds for data rate policy ###
     lower_bound = 1.6
     upper_bound = 8.0
 
+    # time horizon
     T = 10
 
+    # learning rates
     theta_lr = 5e-4
     lambda_lr = .00001
 
-    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax, T=T)
+    # Initialize scheduling system
+    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax, T=T,, mu=mu)
 
-
+    # Set policy distribution
     distribution = TruncatedGaussianBernoulliDistribution(sys.action_dim,
         lower_bound=lower_bound, 
         upper_bound=upper_bound)
+    # Initialize policy trainer
     scheduling_policy = ReinforcePolicy(sys, model_builder=mlp_model2, distribution=distribution, theta_lr = theta_lr, lambda_lr = lambda_lr, T=T)
 
-    history_dict, runtime_dict, runtime_dict2 = run_sys(sys, scheduling_policy, 15000,batch_size=100)
+    # Run simulation
+    history_dict, runtime_dict, runtime_dict2 = run_sys(sys, scheduling_policy, num_iter_train = 30000, num_iter_exec = 1000, batch_size=100)
 
-    save_data(history_dict, "wireless_control_data7.mat")
-    save_rt_data(runtime_dict, "wireless_control_data7b.mat")
-    save_rt_data(runtime_dict2, "wireless_control_data7c.mat")
+    
+    save_data(history_dict, "wireless_control_data7.mat") # save training data
+    save_rt_data(runtime_dict, "wireless_control_data7b.mat") # save execution data  (without control system)
+    save_rt_data(runtime_dict2, "wireless_control_data7c.mat") # save execution data (with control system)
 
 
+#######################################################################
+#### Test used to generate training set with heurisitc ################
+#######################################################################
 def training_set_test():
     mu = 1 # parameter for exponential distribution of wireless channel distribution
-    num_users = 10 # number of wireless channels (action_dim and state_dim)
-    num_rus = 10 
-    tmax = .0005
 
-    lower_bound = 1.6
-    upper_bound = 8.0
+    num_users = 10 # number of devices 
+    tmax = .0005  # latenct bound
 
-    theta_lr = 7e-5
-    lambda_lr = .001
 
-    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax)
+    sys = WirelessSchedulingSystem_TD(num_users, tmax=tmax,, mu=mu)
 
     generate_training_set(sys,1000000,"training_set.mat")
 
 
 
-
+##############################################################################
+##### M   A   I   N  #########################################################
+##############################################################################
 if __name__ == '__main__':
 
     import argparse
@@ -308,6 +344,9 @@ if __name__ == '__main__':
     rn1 = np.random.randint(2**20)
     tf.set_random_seed(rn)
     np.random.seed(rn1)
+
+
+   # Select which test to run
 
    # wireless_control_test2()
     wireless_control_test_T()
