@@ -451,7 +451,7 @@ class WirelessSchedulingSystem_LC(ProbabilisticSystem):
         return lhs
 
 class WirelessSchedulingSystem_TD(ProbabilisticSystem):
-    def __init__(self, num_users, p=1, Ao=None, Ac=None, W=None, tmax=0.001, mu=2, S=1, num_channels=9, t_max = .0005, bound = 10, T=1):
+    def __init__(self, num_users, p=1, Ao=None, Ac=None, W=None, tmax=0.001, mu=2, S=1, CSI=1, t_max = .0005, bound = 10, T=1):
         super().__init__(num_users + num_users*p, 2*num_users, T)
 
         self.channel_state_dim = num_users
@@ -476,7 +476,15 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         self.mu = mu
         self.num_users = num_users
         self.S = S
-        self.num_channels = num_channels
+
+        if CSI.all() == 1:
+            self.sample_source = "Random"
+            self.CSI = None
+        else:
+            self.sample_source = "Loaded"
+            self.CSI = CSI
+
+        self.users = np.random.choice(48,num_users,replace=False)
 
 
         self.rate_by_mcs = [1.6,2.4,3.3,4.9,6.5,7.3,8.1,9.8,10.8,12.2,13.5]
@@ -487,16 +495,16 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         self.per_by_snr = T.get('mcs_snr_per_wcl_20B')
 
         if Ac == None:
-            self.Ac = (.9-.6)*np.random.random_sample(num_users)+0.6
-            #self.Ac = 0.8 * np.ones(num_users)
+            #self.Ac = (.9-.6)*np.random.random_sample(num_users)+0.6
+            self.Ac = 0.8 * np.ones(num_users)
         else:
             if (Ac.shape != (1, num_users)):
                 raise Exception("Ac is not the correct shape")
             self.Ac = Ac
 
         if Ao == None:
-            self.Ao = (1.03-1.001)*np.random.random_sample(num_users)+1.001
-           # self.Ao = 1.01 * np.ones(num_users)
+           # self.Ao = (1.03-1.001)*np.random.random_sample(num_users)+1.001
+            self.Ao = 1.01 * np.ones(num_users)
         else:
             if (Ao.shape != (1, num_users)):
                 raise Exception("Ao is not the correct shape")
@@ -511,7 +519,13 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
 
     def sample(self, batch_size):
         #return self._exponential_normal_sample(batch_size)
-        return self._exponential_uniform_sample(batch_size, self.bound)
+        if self.sample_source == "Random":
+            return self._exponential_uniform_sample(batch_size, self.bound)
+        else:
+            cycle = np.random.randint(1000, size=batch_size)
+            temp = self.CSI[self.users,:]
+            temp2 = temp[:,cycle]
+            return temp2.T
 
     def db_to_col(self,snr_value):
         snr_value = np.minimum(snr_value,35)
@@ -577,7 +591,9 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
             cost_c = np.square(control_state_m * np.tile(self.Ac,(N,1)))
             cost_o = np.square(control_state_m * np.tile(self.Ao,(N,1))) 
 
-            snr_state = self.snr_to_db(self.tx_power,channel_state)
+            if self.sample_source == "Random":
+                 snr_state = self.snr_to_db(self.tx_power,channel_state)
+
             delivery_rates = transmit_action * self.packet_delivery_rate(snr_state,mcs_action,self.per_by_snr)
 
             total_cost = delivery_rates * cost_c + (1-delivery_rates) * cost_o
@@ -622,8 +638,9 @@ class WirelessSchedulingSystem_TD(ProbabilisticSystem):
         cost_c = np.square(control_state_m * np.tile(self.Ac,(N,1)))
         cost_o = np.square(control_state_m * np.tile(self.Ao,(N,1))) 
 
+        if self.sample_source == "Random":
+            snr_state = self.snr_to_db(self.tx_power,channel_state)
 
-        snr_state = self.snr_to_db(self.tx_power,channel_state)
         delivery_rates = transmit_action * self.packet_delivery_rate(snr_state,mcs_action,self.per_by_snr)
 
         total_cost = delivery_rates * cost_c + (1-delivery_rates) * cost_o
