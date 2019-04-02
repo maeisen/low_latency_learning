@@ -1,0 +1,86 @@
+%!TEX root = root.tex
+
+Finding the DNN layer weights $\bbtheta$ that provide good solutions to \eqref{eq_param_problem} requires the solving of a constraint learning problem. The standard approach of gradient-based optimization methods cannot be applied directly here to the presence of the latency constraints. To proceed then, we must formulate an unconstrained problem that captures the form of \eqref{eq_param_problem}. A naive penalty-based reformulation will introduce a similar but fundamentally different problem, so we thus opt for constructing a Lagrangian dual problem. For notational convenience, moving forward we employ the following shorthands for the state variables, aggregate Lyapunov function, latency constraint functions, respectively:
+%
+\begin{align}
+\bbw &:= [\vec2(\bbH); \vec2(\bbX)], \\
+f(\bbphi(\bbw,\bbtheta), \bbw) :&= \sum_{i=1}^m J_i(\bbx_i, \bbh_i, \bbvarsigma_i, \mu_i), \\
+g_j(\bbphi(\bbw,\bbtheta),\bbw) &:=  \mathbb{I}\left[ \tdtau_j(\bbSigma,\bbmu) \leq t_{\max}\right] - (1 - \delta)
+\end{align}
+%
+We introduce the nonnegative dual variables $\bblambda \in \reals_+^n$ associated with the vector of constraint functions $\bbg(\bbp(\bbw,\bbtheta),\bbw) := [g_1(\cdot); \hdots; g_n(\cdot)]$, and form the Lagrangian as
+%
+\begin{align}\label{eq_param_lagrangian}
+   \ccalL(\bbtheta,\bblambda) &:=   \E_{\bbw} \left[ f(\bbphi(\bbw,\bbtheta), \bbw) - \bblambda^T \bbg(\bbphi(\bbw,\bbtheta),\bbw) \right].
+\end{align}
+%
+The Lagrangian in \eqref{eq_param_lagrangian} penalizes constraint violation through the second term. Note, however, that the penalty is scaled by the dual parameter $\bblambda$. The so-called Lagranian dual problem is one in which both the primal variable $\bbtheta$ is simultaneously minimized while the dual parameter $\bblambda$ is maximized. Such a problem can be written with the saddle point formulation
+%
+\begin{align}\label{eq_param_dual0}
+   D_{\bbphi}^* &:= \max_{\bblambda \geq \bb0} \min_{\bbtheta}\ccalL(\bbtheta,\bblambda).
+\end{align}
+%
+The dual optimum $D_{\bbphi}^*$ is the best approximation of the form in \eqref{eq_param_lagrangian} we can have of $J_{\bbphi}^*$. In fact, under some standard assumptions on the problem and assuming a sufficiently dense DNN architecture, we can formally bound the difference between $D_{\bbphi}^*$ and $J^*$ to be proportional to the approximation capacity of the DNN $\bbphi(\bbH,\bbX,\bbtheta)$---see \cite{eisen2018learninga} for details on this result. Thus, we may say that, up to some approximation, solving the unconstrained problem in \eqref{eq_param_dual0} is equivalent to solving the constrained problem in \eqref{eq_param_problem}.
+
+With the unconstrained saddle point problem in \eqref{eq_param_dual0}, we may perform standard gradient-based optimization methods to obtain solutions. The max-min structure necessitates the use of a \emph{primal-dual} learning method, in which we iteratively update both the primal and dual variable in \eqref{eq_param_lagrangian} to find a local stationary point of the KKT conditions of \eqref{eq_param_problem}. Consider a learning iteration index $t=0,1,\hdots$ over which we define a sequence of primal variables $\{\bbtheta_t\}$ and dual variables $\{\bblambda_t\}$. At index $t$, we determine the value of next primal iterate $\bbx_{t+1}$ by adding to the current iterates the corresponding partial gradients of the Lagrangian in \eqref{eq_param_lagrangian} $\nabla_{\bbtheta} \ccalL$, i.e., 
+%
+\begin{align}
+%\bbtheta_{t+1} &= \bbtheta_t + \alpha_t \left[  \nabla_{\bbtheta}\E_{\bbw} f(\bbphi(\bbw,\bbtheta_t),\bbw) \right. \nonumber \\
+%&\qquad  \left. - \ \nabla_{\bbtheta}\E_{\bbw} \bbg(\bbphi(\bbw,\bbtheta_t),\bbw)\bblambda_t \right] \label{eq_pd_update1},
+\bbtheta_{t+1} \! &= \bbtheta_t \! - \! \alpha_t  \nabla_{\bbtheta}\E_{\bbw}  \left[ f(\bbphi(\bbw,\bbtheta_t),\bbw) \! - \! \bblambda_t^T \bbg(\bbphi(\bbw,\bbtheta_t),\bbw) \right] \label{eq_pd_update1},
+\end{align}
+%
+where we introduce $\alpha_t >0$ as a scalar step size. We subsequently perform a corresponding partial gradient update to compute the dual iterate $\bblambda_{t+1}$, i.e.
+%
+\begin{align}
+\bblambda_{t+1} &= \left[ \bblambda_t - \beta_t \E_{\bbw} \bbg(\bbphi(\bbw,\bbtheta_{t+1}),\bbw) \right]_+,\label{eq_pd_update2}
+\end{align}
+%
+with associated step size $\beta_t >0$. Observe in \eqref{eq_pd_update2} that we additionally project onto the positive orthant to maintain the nonnegative constraint on $\bblambda$. The gradient primal-dual updates in \eqref{eq_pd_update1} and \eqref{eq_pd_update2} successively move the primal and dual variables towards maximum and minimum points of the Lagrangian function, respectively.
+
+\subsection{Model-free updates}\label{sec_model_free}
+
+The updates in \eqref{eq_pd_update1}-\eqref{eq_pd_update2} cannot, in general, be applied exactly. To see this, observe that computing the gradients in \eqref{eq_pd_update1} requires computing the gradient of $J_i(\cdot)$---which depends on PDR function $\tdq(\cdot)$---and the gradient of an indicator of  transmission length function $\tdtau(\cdot)$. In practical systems, we do not typically have easily available analytic forms for these functions to take gradients. Furthermore, both the updates in \eqref{eq_pd_update1} and \eqref{eq_pd_update2} require to take the expectation over the distribution of states $\bbx$ and $\bbh$. These, too, are often unknown in practice. However, there exist standard ways of approximating the updates with stochastic, \emph{model-free} updates that do not require such knowledge. Most popular among these is the policy gradient approximation \cite{sutton2000policy}. 
+
+To compute a policy gradient update, we consider the scheduling parameters $\bbSigma$ and $\bbmu$ are drawn stochastically from a distribution with given form $\pi_{\bbphi(\bbw,\bbtheta)}$ whose parameters are given by the output of the DNN $\bbphi(\bbw,\bbtheta)$---e.g. the mean and variance of a normal distribution. Using such a stochastic policy, it can be shown that an unbiased estimators of the gradients in \eqref{eq_pd_update1} and \eqref{eq_pd_update2} can be formed as,
+%
+\begin{align}\label{eq_policy_gradient_s}
+\widehat{\nabla_{\bbtheta}} \mathbb{E}_{\bbw} f(\bbphi(\bbw,\bbtheta),\bbw) \!&=\!  f( \hbp_{\bbtheta},\hbw) \nabla_{\bbtheta} \log \pi_{\bbphi(\hbw,\bbtheta)}(\hbp_{\bbtheta} ) \\
+\widehat{\nabla_{\bbtheta}} \mathbb{E}_{\bbw} \bbg(\bbphi(\bbw,\bbtheta),\bbw)\! &= \! \bbg( \hbp_{\bbtheta},\hbw) \nabla_{\bbtheta} \log \pi_{\bbphi(\hbw,\bbtheta)}(\hbp_{\bbtheta} )^T \\
+\widehat{ \mathbb{E}}_{\bbw} \bbg(\bbphi(\bbw,\bbtheta),\bbw) &= \bbg(\hbp_{\bbtheta},\hbw), \label{eq_pg_3}
+\end{align}
+%
+where $\hbw$ is a sampled state and $\hbp_{\bbtheta}$ is a sample drawn from the distribution $\pi_{\bbphi(\hbw,\bbtheta)}$. In practice, we may reduce the variance of these unbiased estimates by taking $B$ samples and averaging. Note that the updates here only require taking gradients of the log likelihoods rather than of the functions themselves. Thus, we can replace the updates in \eqref{eq_pd_update1} and \eqref{eq_pd_update2} with their model free counterparts, i.e.
+%
+\begin{align}
+\bbtheta_{t+1} \! &= \bbtheta_t \! - \! \alpha_t  \widehat{\nabla_{\bbtheta}}\E_{\bbw}  \left[ f(\bbphi(\bbw,\bbtheta_t),\bbw) \! - \! \bblambda_t^T \bbg(\bbphi(\bbw,\bbtheta_t),\bbw) \right] \label{eq_spd_update1}, \\
+\bblambda_{t+1} &= \left[ \bblambda_t - \beta_t \widehat{\E_{\bbw}} \bbg(\bbphi(\bbw,\bbtheta_{t+1}),\bbw) \right]_+.\label{eq_spd_update2}
+\end{align}
+%
+%
+The complete primal-dual learning algorithm is summarized in Algorithm \ref{alg:learning}. We conclude with a brief remark on state sampling.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%   A   L   G   O   R   I   T   H   M   %%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+{\linespread{1.3}
+\begin{algorithm}[t] \begin{algorithmic}[1]
+\STATE \textbf{Parameters:} Policy model $\bbphi(\bbh,\bbtheta)$ and distribution form $\pi_{\bbh,\bbtheta}$ 
+\STATE \textbf{Input:} Initial states $\bbtheta_0, \bblambda_0$
+\FOR [main loop]{$t = 0,1,2,\hdots$}
+      \STATE Draw samples $\{  \hbtheta, \hbh \}$, or in batches of size $B$
+      \STATE Compute policy gradients  [ c.f. \eqref{eq_policy_gradient_s}-\eqref{eq_pg_3}]
+      \STATE Update primal and dual variables  \ 
+      \footnotesize
+         \begin{align}
+	\mkern-36mu \bbtheta_{t+1} \! &= \bbtheta_t \! - \! \alpha_t  \widehat{\nabla_{\bbtheta}}\E_{\bbw}  \left[ f(\bbphi(\bbw,\bbtheta_t),\bbw) \! - \! \bblambda_t^T \bbg(\bbphi(\bbw,\bbtheta_t),\bbw) \right] , [cf. \eqref{eq_spd_update1}]\nonumber \\
+	\mkern-36mu \bblambda_{t+1} &= \left[ \bblambda_t - \beta_t \widehat{\E_{\bbw}} \bbg(\bbphi(\bbw,\bbtheta_{t+1}),\bbw) \right]_+ \!\![cf. \eqref{eq_spd_update2}]\	\nonumber 
+\end{align}
+\ENDFOR
+
+\end{algorithmic}
+\caption{Model-Free Primal-Dual Learning}\label{alg:learning} \end{algorithm}}
+
+
+\begin{remark}\label{remark}\normalfont
+In the gradient estimations in, e.g. \eqref{eq_policy_gradient_s}, we sample both the control states $\bbx$ and channel states $\bbh$. This assumes that such samples can be drawn i.i.d. While this may generally be true for the channel states $\bbh$, it will not be generally be true for the control states $\bbx$ in practice, due to the fact that the states evolve based on the switched dynamics in \eqref{eq:system}, which itself depends on the scheduling actions taken. A more precise way to model the statistics of the control states would be with a Markov decision process (MDP). The generalization of the presented techniques for this setting make up what is known as \emph{reinforcement learning} algorithms. In this work, we nonetheless assume that $\bbx$ can also be drawn i.i.d. from an approximate distribution and leave the full MDP formulation as the study of future work.
+\end{remark}

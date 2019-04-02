@@ -1,0 +1,262 @@
+\documentclass[conference,10pt]{IEEEtran}
+ \IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{color}
+\usepackage[pdftex]{graphicx}
+\graphicspath{{fig/}{jpeg/}}
+\usepackage[cmex10]{amsmath}
+\usepackage{amssymb}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{subcaption}
+\usepackage[outdir=./]{epstopdf}
+%\usepackage{algpseudocode}
+\usepackage{hyperref}
+\usepackage{comment}
+\input{../mysymbol.sty}
+\input{../my_sections.tex}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows}
+\usepackage{float,environ}
+\usetikzlibrary{matrix} % for block alignment
+\usetikzlibrary{decorations.markings} % for arrow heads
+\usetikzlibrary{calc} % for manimulation of coordinates
+\usetikzlibrary{decorations.pathmorphing,snakes, positioning, decorations.pathreplacing}
+
+\usetikzlibrary{fit}
+%\input{figures/tikh_styles}
+
+\usepackage{pgfplots}
+\usepackage{color}
+%\usepackage{setspace}
+%\usepackage{hyperref}
+\usepackage{multirow}
+%\usepackage{rotating}
+%\usepackage{comment}
+%\usepackage{flushend}
+%\usepackage{caption}
+%\usepackage{subcaption}
+%\usepackage[affil-it]{authblk}
+%\usepackage{bm}
+%\usepackage{algorithm}
+%\usepackage{algorithmic}
+%\usepackage{enumerate}
+%\usepackage{morefloats}
+%\usepackage{setspace}
+
+\makeatletter
+\newsavebox{\measure@tikzpicture}
+\NewEnviron{scaletikzpicturetowidth}[1]{%
+  \def\tikz@width{#1}%
+  \def\tikzscale{1}\begin{lrbox}{\measure@tikzpicture}%
+  \BODY
+  \end{lrbox}%
+  \pgfmathparse{#1/\wd\measure@tikzpicture}%
+  \edef\tikzscale{\pgfmathresult}%
+  \BODY
+}
+\makeatother
+
+\newcommand{\QED}{\hfill\ensuremath{\blacksquare}}
+\newcommand{\norm}[1]{\ensuremath{\left\| #1 \right\|}}
+
+%\IEEEoverridecommandlockouts 
+\def \vneg {\vspace{-.5cm}}
+
+\def\whp{\text{w.h.p}}
+\def\E{\mathbb{E}}
+\def\P{\mathbb{P}}
+\def\supp{\text{support}}
+\def\Tr{\text{Tr}}
+\def\vec2{\text{vec}}
+
+
+% Resource allocation functions
+\def \fph  {\bbf\big(\bbp(\bbh), \bbh\big)}
+\def \Efph {\mbE\big[\fph\big]}
+%
+% Optimal power allocation functions
+\def \fphstar  {\bbf\big(\bbp^*(\bbh),\bbh\big)}
+\def \Efphstar {\mbE\big[\fphstar\big]}
+%
+% Slater's condition power allocation functions
+\def \fphzero  {\bbf\big(\bbp_0(\bbh),\bbh\big)}
+\def \Efphzero {\mbE\big[\fphzero\big]}
+%
+% Parametrized power allocation functions
+\def \fphih  {\bbf\big(\bbphi(\bbh,\bbtheta),\bbh\big)}
+\def \Efphih {\mbE\big[\fphih\big]}
+%
+% Parametrized power allocation functions indexed by sample index k
+\def \fpihk {\bbf\big(\bbh_k,\bbphi(\bbh_k,\bbtheta_k)\big)}
+%
+% Lagrangian
+\def \Lagphi {\ccalL_{\bbphi}(\bbtheta,\bbx, \bblambda, \bbmu)}
+
+
+%\addtolength{\textwidth}{10mm}
+%\addtolength{\evensidemargin}{-5mm}
+%\addtolength{\oddsidemargin}{-5mm}
+%\addtolength{\textheight}{10mm} 
+%\addtolength{\topmargin}{-5mm}
+
+%\renewcommand \blue[1]{}  \renewcommand \red[1]{}   
+
+\newtheorem{assumption}{\hspace{0pt}\bf Assumption}
+\newtheorem{lemma}{\hspace{0pt}\bf Lemma}
+\newtheorem{proposition}{\hspace{0pt}\bf Proposition}
+\newtheorem{example}{\hspace{0pt}\bf Example}
+\newtheorem{observation}{\hspace{0pt}\bf Observation}
+\newtheorem{theorem}{\hspace{0pt}\bf Theorem}
+\newtheorem{corollary}{\hspace{0pt}\bf Corollary}
+\newtheorem{fact}{\hspace{0pt}\bf Fact}
+\newtheorem{remark}{\hspace{0pt}\bf Remark}
+\newtheorem{test}{\hspace{0pt}\it Test Case}
+\newtheorem{definition}{\hspace{0pt}\bf Definition}
+\newtheorem{conj}{\hspace{0pt}\bf Conjecture}
+
+
+
+
+% Title.
+% ------
+\begin{document} 
+%
+% Single address.
+% ---------------
+
+\title{Primal-Dual Learning for Resource Allocation \\ in Low Latency Wireless Systems}
+\author{Mark Eisen$^*$ \quad Mohammad M. Rashid$^\dagger$ \quad 
+			Dave Cavalcanti$^\dagger$ \quad Alejandro Ribeiro$^*$
+\thanks{{Supported by Intel Science and Technology Center for Wireless Autonomous Systems. The authors are with the $(*)$Department of Electrical and Systems Engineering, University of Pennsylvania and $(\dagger)$Wireless Communications Research, Intel Corporation. Email: maeisen@seas.upenn.edu, mamun.rashid@intel.com, dave.cavalcanti@intel.com, aribeiro@seas.upenn.edu}.}}
+
+
+\maketitle
+
+%\thispagestyle{empty}
+%
+\begin{abstract}
+We consider the problem of scheduling transmissions over low-latency wireless communication links to control various control systems. Low-latency requirements are critical in developing wireless technology for industrial control, but are inherently challenging to meet while also maintaining reliable performance. An alternative to ultra reliable low latency communications (URLLC) is a framework in which reliability is adapted to control system demands. We formulate the control-aware scheduling problem as a constrained statistical optimization problem in which the optimal scheduler is a function of current control and channel states. The scheduler is parameterized with a deep neural network, and the constrained problem is solved using techniques from primal-dual learning. Furthermore, these updates are model-free in that they do not require explicit knowledge of channels models or performance metrics. The resulting control-aware deep scheduler is evaluated in empirical simulations and strong performance is shown relative to other heuristic scheduling methods.
+\end{abstract}
+%
+
+\begin{IEEEkeywords}
+wireless control, low-latency, deep learning, primal-dual
+\end{IEEEkeywords}
+
+
+\section{Introduction}
+
+The recent advances in wireless technology and automation have given rise to efforts in integrating wireless communications in autonomous environments, particularly in industrial control settings where the scale of wired networks is proving increasingly costly \cite{zand2012wireless, wollschlaeger2017future}. The analysis of control systems operating over wireless communication links is thus an integral apart in enabling these wireless industrial automation applications. However, the performance specifications of these applications demands the design of wireless networks that can meet both the high reliability and low latency demands of the system \cite{zand2012wireless, varghese2014wireless, weiner2014design, popovski2018wireless, bennis2018ultra}. The problem of ultra reliable low latency communications (URLLC) is inherently challenging as the physical medium of wireless communication trades off these two performance criteria, making it hard to meet both reliability and latency demands.
+
+One promising direction in enabling low latency communications involves specific developments in radio resource allocation, or scheduling. For low latency applications, traditional delay-aware schedulers ~\cite{wu2014analysis, lu1999fair, andrews2001providing} have been employed, in addition to more recent URLLC techniques based on various forms of diversity \cite{swamy2015cooperative, popovski2018wireless, nielsen2018ultra, ashraf2018dynamic}---all of which are agnostic to the control system. However, due to the physical limitations of the wireless channel, it is often necessary to use information from the control system to make proper use of scheduling resources in meeting latency requirements. While there exist numerous ways in which control system information is incorporated into ``control-aware'' scheduling methods \cite{Cervin_event_scheduling, mamduhi2014event,shi2011optimal,han2017optimal, GatsisEtal15,demirel2018deepcas,leong2018deep}, these are agnostic to latency requirements of the system. More recent work \cite{eisen2018control} looks at heuristic based scheduling methods that are both control and latency aware. 
+
+Aside from traditional heuristic based scheduling methods, tools from machine learning are being incorporated into making intelligent scheduling and resource allocation decisions. The work in \cite{eisen2018learninga} builds a framework for solving a generic set of resource allocation problems by interpreting resource allocation as a constrained statistical learning problem. This leads a natural use of learning models, such as deep neural networks (DNNs), for designing schedulers. Recent advancements apply techniques from both reinforcement learning and deep learning for control-aware scheduling in simple systems \cite{demirel2018deepcas,leong2018deep}. The goal in this work is to use the framework of \cite{eisen2018learninga} to employ so-called primal-dual deep learning to tackle develop novel scheduling techniques that are both control-aware and latency constrained. 
+
+This paper is organized as follows. We formulate the wireless control system in which state information is communicated to the control over a wireless channel as a switched dynamical system (Section \ref{sec_problem}). We further discuss the scheduling architecture under which we can allocate channels and data rates between plants. With this formulation, we formulate the optimal scheduling problem that minimizes a control cost under latency constraints (Section \ref{sec_opt}). As this problem is a statistical learning problem, it can be parameterized with a deep neural network (Section \ref{sec_param}). To handle the constraints, we convert the problem to the Lagrangian dual problem and present a primal-dual learning method to find the optimal parameters (Section \ref{sec_primal_dual}). We further discuss ways in which the primal-dual method can be approximated without explicit model knowledge (Section \ref{sec_model_free}). The performance of the learned control-aware scheduling method is analyzed in a numerical simulation of a control system with latency constrained and compared other heuristic scheduling methods (Section \ref{sec_numerical_results}). 
+
+
+
+%\input{Problem_formulation_icassp}
+
+\section{Wireless Control Systems}\label{sec_problem}
+
+%
+\begin{figure}
+\centering
+\input{../images/multiplex.tex}
+\caption{Scheduling architecture of $m=4$ users---colored in green, blue, red, and yellow---across $n=3$ channels.}
+\label{fig_multi}
+\end{figure}
+%
+
+\input{problem_formulation}
+
+\subsection{Deep learning parameterization}\label{sec_param}
+
+The scheduling problem in \eqref{eq_problem} is computationally challenging because it requires finding a policy---or \emph{function}---$\bbp(\bbH,\bbX)$. In statistical learning, or regression, problems the regression function is replaced by some given parameterization $\bbphi(\bbH,\bbX,\bbtheta)$ that is defined with some finite dimensional parameter $\bbtheta \in \reals^q$. Their exist a wide variety of choices of this parameterization, but in modern machine learning problems the \emph{deep neural network (DNN)} is commonly employed. This is due to the fact the DNN can be shown both empirically and analytically to contain strong representative power and generalization ability, meaning that it can approximate almost any function well. A DNN is defined as a composition of $L$ layers, each of which consisting of a linear operation followed by a point-wise nonlinearity---also known as an activation function.  More specifically, the layer $l$ is defined by the linear operation $\bbW_l \in \reals^{q_{l-1} \times q_l}$ followed by a non-linear activation function $\mathbb{\sigma}_{l}: \reals^{q_l} \rightarrow \reals^{q_l}$. Common choices of activation functions $\mathbb{\sigma}_{l}$ include a sigmoid function or a rectifier function (commonly referred to as ReLu). Given an input from the $l-1$ layer $\bbw_{l-1} \in \reals^{q_{l-1}}$, the resulting output $\bbw_{l} \in \reals^{q_l}$ is then computed as $\bbw_l := \mathbb{\sigma}_{l}(\bbW_l \bbw_{l-1})$.  The full DNN-parameterization of the scheduling policy is then defined as an $L$-layer DNN whose input at the initial layer is the concatenation of states $\bbw_0 := [\vec2(\bbH); \vec2(\bbX)]$, i.e.
+%
+\begin{equation}\label{eq_policy_dnn}
+\bbphi(\bbh,\bbtheta) := \mathbb{\sigma}_{L}(\bbW_{L} (\mathbb{\sigma}_{L-1}(\bbW_{L-1}(\hdots(\mathbb{\sigma}_{1}(\bbW_{1}\bbw_0)))))).
+\end{equation}
+%
+
+
+The parameter vector $\bbtheta \in \reals^q$ that defines the DNN is then the entries of $\{ \bbW_l \}_{l=1}^L$ with $q = \sum_{l=1}^{L-1} q_l q_{l+1} $. Further note that we can easily construct an activation function at the final layer $\mathbb{\sigma}_L$---or the \emph{output layer}---such that the outputs $\bbphi(\bbh,\bbtheta)$ are in the space $\{0,1\}^{n \times m} \times [\mu_{\min},\mu_{\max}]$ that contains possible schedules. With this DNN parameterization, the control-aware scheduling problem can be rewritten as
+%
+\begin{alignat}{2} \label{eq_param_problem}
+   J_{\bbphi}^* := &  \min_{\bbtheta \in \reals^q}  \E_{\bbH,\bbX} \left[ \sum_{i=1}^m J_i(\bbx_i,\bbh_i, \bbalpha_i, \mu_i) \right],             \\
+        &  \st           \quad           \mathbb{P}_{\bbH,\bbX} \left( \tilde{\tau}_j(\bbSigma, \bbmu) \leq t_{\max} \right)   \geq 1-  \delta \qquad \forall j,   \nonumber \\
+        &     \                       \bbphi(\bbH,\bbX,\bbtheta) := \{ \bbSigma \in  \{0,1\}^{n \times m}, \bbmu \in [\mu_{\min},\mu_{\max}]^m \}.   \nonumber%   
+\end{alignat}
+% 
+Observe in \eqref{eq_param_problem} that the optimization is performed over $\bbtheta$ rather than the scheduling policy directly. In other words, we look for the interlayer weights that define a DNN that minimizers the total control cost while satisfying the latency constraints. We proceed then to discuss a learning method that can find solutions to the constrained optimization problem in \eqref{eq_param_problem}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%  S  E  C  T  I  O  N     %%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Primal-Dual Learning}\label{sec_primal_dual}
+
+
+
+
+
+
+\input{scheduling_alg}
+
+ \begin{figure*}[t]
+\centering
+\includegraphics[width=0.45\linewidth, height=.18\textheight, keepaspectratio]{../images/cost_plot.eps} \qquad
+\includegraphics[width=0.45\linewidth, height=.18\textheight, keepaspectratio]{../images/time_plot.eps} 
+\caption{Convergence of (left) objective function value, and (right) transmission time for a low-latency, control aware scheduling policy over the learning process. The DNN parameterized scheduling policy obtains feasible latency-contained schedules ($t_{\max} = 5 \times 10^{-4}$) that converges to a local minimum.}\label{fig_simple_results}
+\end{figure*}
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   S   E   C   T   I   O   N   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ \section{Simulation Results}\label{sec_numerical_results}
+ 
+
+ 
+We perform a series of simulations on latency-constrained wireless control systems to evaluate the performance the learning method in and the resulting control-aware scheduling policies. We generate a series $m=20$ plants with closed-loop gains $\hbA_i \sim \text{Uniform}(0.8,0.95)$ and open-loop gains $\mathring{\bbA}_i \sim \text{Uniform}(1.01,1.3)$. The variance for all system noise $\bbw_i$ is set to be $W=1$. All such plants send their state information over a shared wireless channel with $n=5$ independent channels with a total latency constraint of $t_{\max} = 0.5$ ms. A latency bound of this order is typical of industrial control systems such as printing machines and presses \cite{ashraf2016ultra}. We further assume that the states of the plants are confined to the box $[-10,10]$. The DNN is given an architecture of 4 layers of sizes 256, 128, 64, and 32, all using a ReLU activation function.
+
+With the scheduling architecture given in Figure \ref{fig_multi} for 5 channels and 20 plants, at each control scheduling interval each plant is given a data rate $\mu_i$ and a set of channels to transmit on. In our simulations, we use the modulation and coding schemes (MCS) of the next-generation IEEE 802.11ax Wi-Fi protocol as a representative architecture for data rate selection and packet error rate computation. As such, the continuous data rates $\mu_i$ are selected in an interval of $[1.6, 8]$ and rounded down to the nearest discrete MCS selection given in 802.11ax---see \cite{liu2014ieee} for details on the MCS tables given in this protocol. The corresponding transmission time $\tau(\mu)$ is then calculated assuming a fixed packet size of 100 bytes and the packet delivery rate $q(h,\mu)$ is computed using the associated AWGN error curve (scaled by the effective SNR given channel conditions).
+
+
+
+ \begin{figure}
+\centering
+\includegraphics[height=.22\textheight]{../images/system_simulation.eps}
+\caption{Evolution of plant states over 1000 control cycles using both the (top) DNN-based control aware scheduler and (b) a round robin scheduler.}\label{fig_system}
+\end{figure}
+
+In Figure \ref{fig_simple_results} we show the training process for the control-aware scheduler using the primal-dual scheduler given in Algorithm \ref{alg:learning}. In the left figure, we show the aggregate Lyapunov control cost over the course of $40,000$ learning iterations and in the right figure, show the transmission time of each channel (shown in different colored lines). As can be seen the in the figure, the policies initially output infeasible schedules that are beyond the latency limit but eventually converge to scheduling decisions that respect latency requirements. The control objective continues to decrease after feasibility is obtained and eventually converges to a local minimum value.
+
+
+We proceed to simulate the performance of the control systems using the scheduling policy obtained at the end of the learning process and compare against a standard, round-robin scheduling policy---i.e. control-agnostic. Because the constraint in \eqref{eq_problem} is satisfied only with probability $1-\delta$, we ensure latency requirements are met at runtime by restricting all transmissions that are scheduled after the latency bound. In Figure \ref{fig_system} we show the state values over 1000 control cycles for the DNN-based scheduler (top figure) and the round robin scheduler (bottom figure). It can be observed that, overall, the plants are kept in better states using the DNN scheduler than with the round robin scheduler. This representative simulation highlights the ability of control-aware scheduling to better meet strict latency demands and, furthermore, highlight the ability of a DNN to properly encode such a constraints and objective in its dense architecture. 
+
+
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%   S   E   C   T   I   O   N   %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ 
+ \section{Conclusion}
+In this paper we develop a control-communication control-aware approach towards scheduling for low-latency wireless control systems. To handle the challenge of achieving high reliability performance with limited scheduling resources, we formulate a control-aware scheduling problem in which reliability is adapted to control and channel states and plant dynamics. This problem takes the form of a constrained statistical learning problem, in which solutions can be found by parameterized the scheduling policy with a deep neural network and applying a primal-dual learning framework to obtain the optimal weights of the neural network. Numerical simulations showcase the ability of the primal-dual method to find scheduling policies that outperform simple control-agnostic scheduling procedures.
+
+
+
+% References should be produced using the bibtex program from suitable
+% BiBTeX files (here: strings, refs, manuals). The IEEEbib.bst bibliography
+% style file from IEEE produces unsorted bibliography list.
+% -------------------------------------------------------------------------
+\urlstyle{same}
+\bibliographystyle{../IEEEbib}
+\bibliography{../wireless_ll_control,../scheduling_control}
+
+
+\end{document}

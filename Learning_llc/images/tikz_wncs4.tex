@@ -1,0 +1,101 @@
+\pgfdeclarelayer{bg0}    % declare background layer
+\pgfdeclarelayer{bg1}    % declare background layer
+\pgfsetlayers{bg0,bg1,main}  % set the order of the layers (main is the standard layer)
+
+
+\tikzstyle{block} = [draw,rectangle,thick,
+%minimum height=0.7cm, minimum width=0.3cm, 
+text height=0.2cm, text width=0.7cm, 
+fill=blue!30, outer sep=0pt, inner sep=0pt]
+\tikzstyle{dots} = [font = \large, minimum width=2pt]
+\tikzstyle{dash_block} = [draw,rectangle,dashed,minimum height=1cm,minimum width=1cm]
+\tikzstyle{smallblock} = [draw,rectangle,minimum height=0.5cm,minimum width=0.5cm,fill= green!30, font =  \scriptsize]
+\tikzstyle{smallcircle} = [draw,ellipse,minimum height=0.1cm,minimum width=0.3cm,fill= yellow!40, font =  \scriptsize ]
+\tikzstyle{connector} = [->]
+\tikzstyle{dash_connector} = [->,thick,decorate,decoration={snake, amplitude =1pt, segment length=8pt}, magenta]
+\tikzstyle{branch} = [circle,inner sep=0pt,minimum size=1mm,fill=black,draw=black]
+
+\tikzstyle{vecArrow} = [thick, decoration={markings,mark=at position
+   1 with {\arrow[semithick]{open triangle 60}}},
+   double distance=1.4pt, shorten >= 5.5pt,
+   preaction = {decorate},
+   postaction = {draw,line width=1.4pt, white,shorten >= 4.5pt}]
+
+
+
+\begin{tikzpicture}[scale=1, blocka/.style ={rectangle,text width=0.9cm,text height=0.6cm, outer sep=0pt}]
+ \small
+  
+ 
+    % node placement with matrix library: 5x4 array
+    \matrix(M)[ampersand replacement=\&, row sep=2.0cm, column sep=10pt] {
+    
+    %\&
+    \node[smallblock, align=center] (CS1) {Control \\ System {1}};\&\&
+    \node[smallblock, align=center] (CS2) {Control \\ System {2}};\&\&\&
+%    \&
+    \node(d1) {$\cdots$};\&
+%    \&
+    \node[smallblock, align=center] (CSm) {Control \\ System \textit{m}};\&
+    \\
+    %
+    \node[blocka] (R1) {};\&\&
+    \node[blocka] (R2) {};\&\&\&
+%    \node[smallcircle] (R2) {R2};\&
+    \node[blocka] (d3) {};\&
+    \node[blocka] (Rm) {};\&
+    \\
+    };
+    
+    
+    \node[block] (outer) [fit=(R1.north west) (d3) (Rm.south east)] {};
+    
+    \node[align=center, scale =0.9] at (outer.center) {Access Point/ \\Controller};
+    
+    \draw [->, thick, red] (CS1) -- node[left]{} (R1);
+    \draw [->, thick, red] (CS2) -- node[left]{} (R2);
+%    \draw [->, thick, magenta] (T2) -- node[left]{ \scriptsize $h_2$} (R2);
+    \draw [->, thick, red] (CSm) -- node[left]{} (Rm);
+%    
+
+		\begin{pgfonlayer}{bg0}    % select the background layer
+		\draw [->, dashed, black] (R1) |- ($(R1) + (+35pt,-20pt)$) node(down_right){} 
+		-- ($(CS1) + (+35pt,+20pt)$) node(up_right){} -| (CS1);
+		\end{pgfonlayer}
+		
+		
+		\begin{pgfonlayer}{bg0}    % select the background layer
+		\draw [->, dashed, black] (R2) |- ($(R2) + (+35pt,-20pt)$) node(down_right){} 
+		-- ($(CS2) + (+35pt,+20pt)$) node(up_right){} -| (CS2);
+		\end{pgfonlayer}
+		
+				
+		\begin{pgfonlayer}{bg0}
+		\draw [->, dashed, black] (Rm) |- ($(Rm) + (+35pt,-20pt)$) node(down_right){} 
+		--($(CSm) + (+35pt,+20pt)$) node(up_right){} -| (CSm);
+		\end{pgfonlayer}
+				
+		%
+		\begin{pgfonlayer}{bg1}
+		%\begin{scope}[on background layer]
+		\node(shared) [fill=red!10, fit={($(CS1.south) + (-15pt, -10pt)$) 
+		($(CS2.south) + (-10pt, -10pt)$)
+		($(CSm.south) + (+20pt, -10pt)$)
+		($(R1.north) + (-15pt, +10pt)$)
+		($(R2.north) + (-10pt, +10pt)$)
+		($(Rm.north) + (+20pt, +10pt)$)
+		}] {};
+		%\end{scope}
+		\end{pgfonlayer}
+		
+		\node[align=center, red!50](shared_medium) at (shared.center) {Shared \\ Wireless \\ Medium};
+		
+
+\coordinate (FIRST NE) at (current bounding box.north east);
+   \coordinate (FIRST SW) at (current bounding box.south west);
+
+	\pgfresetboundingbox
+   \useasboundingbox ($(FIRST SW) + (+30pt,0)$) rectangle (FIRST NE);
+
+
+\end{tikzpicture}

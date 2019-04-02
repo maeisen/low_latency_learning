@@ -1,0 +1,67 @@
+%!TEX root = root.tex
+
+
+%%%%%%%%%%%%%%%%% F I G U R E %%%%%%%%%%%%%%%%5
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{figure}
+%\centering
+%\input{../images/tikz_wncs4}
+%\caption{Wireless control system with $m$ independent systems. Each system contains a sensor that measure state information, which is transmitted to the controller over a wireless channel. The state information is used by the controller to determine control policies for each of the systems.The communication is assumed to be wireless in the uplink and ideal in the downlink.}
+%\label{fig_wcs}
+%\end{figure}
+
+We consider a series of $m$ control systems operating over a shared wireless channels. The state of plant $i$ at control cycle index $k$ is given by the variable $\bbx^k_i \in \reals^p$. At each control/scheduling cycle, the sensor measures the state $\bbx^k_i$ and transmits it over a wireless channel to a common base station (BS) that is co-located with the controller. Given the state information, the controller determines the necessary control input is fed back to the plant. This is referred to as the closed-loop configuration of the control cycle. Given the noisy nature of the wireless channel, there is the potential for the communications packet containing the state information to be dropped, resulting in an open-loop configuration of the control cycle. We may model the linear dynamics of the wireless control system for plant $i$ as
+%
+\begin{equation}\label{eq:system}
+	\bbx_i^{k+1} = \left\{ \begin{array}{ll} \hbA_i \bbx^k_i + \bbw^k &\text{if packet received} \\ \mathring{\bbA}_i \bbx^k_i + \bbw^k & \text{otherwise} \end{array} \right.,
+\end{equation}
+%
+where $\hbA_i \in \reals^{p\times p}$ is the closed loop gain, $\mathring{\bbA}_i \in \reals^{p\times p}$ is the open loop gain, and $\bbw^k \in \reals^p$ is zero-mean i.i.d. disturbance process with covariance $\bbW$. The closed loop and open loop gains may reflect, e.g., controlled dynamics using accurate and estimated state information, respectively. We assume that the closed loop gains are preferable to the open loop gain, i.e. $\lambda_{\max}(\hbA_i) < \lambda_{\max}(\mathring{\bbA}_i)$. Further note this model restricts its attention to wireless connections in uplink of the control loop, while downlink is assumed to occur over an ideal channel---i.e. no packet drops.
+%
+
+Given this dynamical model of the wireless control systems, the communications goal is to allocate radio resources among the various plants to maintain strong performance across all the systems. To do so, we present a generic frequency and time division multiplexing scheduling architecture with which the BS allocates scheduling resources to the plants. A scheduling window occupies the uplink of a single cycle in the control loop; the total length of this scheduling window is subject to a tight low-latency bound. Transmissions are scheduled by the BS across $n$ different channels occupying different frequency bands. Multiple transmissions scheduled in the same channel will occur in sequence, while transmissions scheduled in different channels may occur simultaneously. Denote by $\bbvarsigma_i \in \{0,1\}^n$ a binary vector whose $j$th element $\varsigma_{i,j}$ is 1 if the $i$th device transmits in the $j$th channel, and 0 otherwise. Further denote for each device a data rate selection $\mu_i \in [\mu_{\min}, \mu_{\max}]$. These two scheduling parameters together define the scheduling decision made for the $i$ plant. This architecture reflects generalizes many practical scheduling-based multiple access wireless protocols, such as those used in LTE \cite{sesia2011lte} , 5G \cite{agiwal2016next}, and next-generation WiFi IEEE 802.11ax \cite{liu2014ieee}. An illustration of $m=4$ users making multiple transmission across $n=3$ channels is shown in Figure \ref{fig_multi}.
+
+The achieved communications performance by a given scheduling decision can be formulated as follows. We first define $\bbh^k_{i} \in \reals^n_+$ to be the set of fading channel states experienced by device $i$ at cycle $k$, where the $j$ element $h^k_{i,j}$ is the fading channel gain in channel $j$. We assume that these channel conditions do not change over the course of a scheduling window. In any given channel with fading state $\bbh$, we define a function $q(h,\mu)$ that returns the packet delivery rate (PDR), or the probability of successful transmission of the packet, when transmitting with data rate $\mu$. Likewise, we define a function $\tau(\mu)$ that returns the transmission time to transmit a packet of fixed length with data rate $\mu$. These two functions play a critical role in designing low-latency wireless control systems, as they allow us to explore the trade-off between PDR and transmission time and the resulting effect on control system performance. We may consider that the functions $q(h, \mu)$ and $\tau(\mu)$ both get smaller as we increase data rate $\mu$, i.e.
+%
+\begin{equation}
+\mu' > \mu \implies q(h, \mu) \leq q(h, \mu'), \quad \tau(\mu') \leq \tau(\mu).
+\end{equation}
+%
+Thus, by increasing the data rate we may reduce the transmission time to satisfy latency constraints, but at the cost of control system performance, as illustrated by the switched dynamics in \eqref{eq:system}.
+
+\subsection{Optimal scheduling design}\label{sec_opt}
+
+We are interested in designing scheduling policies that optimize control performance, subject to the strict low latency constraints of the system. To do so, we first formulate the global control-based performance given a scheduling decision. Collect in the matrix $\bbSigma \in \{0,1\}^{n \times m}$ all of the channel transmission vectors $\bbvarsigma_i$ for $i=1,\hdots,m$ and collect in the vector $\bbmu \in [\mu_{\min},\mu_{\max}]^m$ the data rates $\mu_i$ for $i=1,\hdots,m$. Given that a device may transmit in multiple channels within a single scheduling cycle, the probability of successful transmission can be given as the probability that the transmission was successful in at least one channel, i.e.
+%
+\begin{equation}\label{eq_psr}
+\tdq(\bbh_i, \bbvarsigma_i, \mu_i) := 1 - \prod_{j=1}^n \left(1 - \varsigma_{i,j} q(h_{i,j}, \mu_i)\right). 
+\end{equation}
+%
+
+The total delivery rate in \eqref{eq_psr} can be viewed as the probability of receiving the packet and experiencing the closed loop dynamics in \eqref{eq:system}. Now, to evaluate the performance of a given plant at a particular state $\bbx$, define a quadratic Lyapunov function $L_i(\bbx) := \bbx^T \bbP_i \bbx$ with some positive definite matrix $\bbP_i \in \reals^{p \times p}$. Such a function can be used to evaluate performance or stability of the control system. Because the control system evolves in a random manner, the cost of a given scheduling decision $\{\bbvarsigma_i, \mu_i\}$ for the $i$th plant can be formulated as the \emph{expected future Lyapunov cost} under such a schedule. As the probability of closing the loop in \eqref{eq:system} is given by $\tdq(\bbh^k_i, \bbvarsigma_i, \mu_i)$, we may write this expected future cost as 
+%
+\begin{align}\label{eq_ex_cost}
+J_i(\bbx_i, \bbh_i, \bbvarsigma_i, \mu_i) :=& \quad \E \left[ L_i(\bbx^{k+1}_i) \mid \bbx^k_i = \bbx_i, \bbh^k_i = \bbh_i \right] \\
+=&  \quad  \tdq(\bbh_i, \bbvarsigma_i, \mu_i) (\hbA_i \bbx_i)^T \bbP_i (\hbA_i \bbx_i) \quad +  \nonumber   \\
+ &(1- \tdq(\bbh_i, \bbvarsigma_i, \mu_i))  (\mathring{\bbA}_i \bbxi)^T \bbP_i (\mathring{\bbA}_i \bbx_i) \nonumber \\
+ &+  \quad \Tr(\bbP_i \bbW_i). \nonumber
+\end{align}
+%
+Observe that the local control cost for the $i$th plant $J_i(\bbx^k_i, \bbh^k_i, \bbvarsigma_i, \mu_i)$ is a function of both the system \emph{states}---the fading channel $\bbh^k_i$ and control state $\bbx^k_i$---and the scheduler \emph{actions}---channel selection $\bbvarsigma_i$ and data rate $\mu_i$. The objective is to choose the actions $\bbvarsigma_i$ and $\mu_i$ that minimizes the cost relative to states $\bbh^k_i$ and $\bbx^k_i$. 
+
+In addition to minimizing a control cost, we must make scheduling decisions that respect the low-latency requirements of the system. To formulate this constraint, consider the \emph{total} time of a global scheduling decision $\bbSigma, \bbmu$ of channel $j$ as the sum of all active transmissions, i.e.
+%
+\begin{equation} \label{eq_total_time}
+\tilde{\tau}_j(\bbSigma, \bbmu) :=   \sum_{i=1}^m \varsigma_{i,j} \tau(\mu_i).
+\end{equation}
+%
+
+Combining all the local costs for plants $i=1,\hdots,m$ in \eqref{eq_ex_cost} with the latency constraints for all channels $j=1,\hdots,n$ in \eqref{eq_total_time}, we may define the optimal scheduling design problem. Because we are interested in long-term, or average, performance across random channels and control states, we optimize with respect to expected costs and probabilistic constraints. Collect all channel vectors $\bbh_i$ in a matrix $\bbH \in \reals_+^{n \times m}$ and states $\bbx_i$ in a matrix $\bbX \in \reals^{p \times n}$. Consider a scheduling policy $\bbp(\bbH, \bbX) := \{ \bbSigma, \bbmu\}$ that, given a set of channel states $\bbH$ and control states $\bbX$, returns a schedule defined by the channel selection matrix $\bbSigma$ and data rate selection vector $\bbmu$. The optimal low-latency constrained scheduling policy for the wireless control systems is the one which solves the program
+%
+\begin{alignat}{2} \label{eq_problem}
+   J^* := &  \min_{\bbp(\bbH, \bbX)}  \E_{\bbH,\bbX} \left[ \sum_{i=1}^m J_i(\bbx_i,\bbh_i, \bbvarsigma_i, \mu_i) \right],             \\
+        &  \st           \quad           \mathbb{P}_{\bbH,\bbX} \left( \tilde{\tau}_j(\bbSigma, \bbmu) \leq t_{\max} \right)   \geq 1-  \delta \qquad \forall j,   \nonumber \\
+        &     \                       \bbp(\bbH,\bbX) := \{ \bbSigma \in  \{0,1\}^{n \times m}, \bbmu \in [\mu_{\min},\mu_{\max}]^m \}.   \nonumber%   
+\end{alignat}
+% 
+In \eqref{eq_problem}, we minimize the average cost over the distribution of channel and control states, subject to the condition that the probability of violating the latency constraint over the distribution of states is less than some small value $\delta$. The above scheduling problem can be viewed as a constrained statistical learning problem---a connection made for a more generic class of resource allocation problems in \cite{eisen2018learninga}. While such a problem characterizes the optimal scheduling decision for the latency-constraint wireless control system, finding solutions to such a problem is a significant challenge. This is due to a number of complexities in \eqref{eq_problem}, namely: (i) it requires functional optimization, (ii) it contains explicit constraints, and (iii) we typically do not have analytic forms for the functions and distributions in \eqref{eq_problem}. The first of these complexities can be resolved using a standard technique in statistical learning, discussed next in Section \ref{sec_param}. The latter two of these complexities are discussed and resolved later in Sections \ref{sec_primal_dual} and \ref{sec_model_free}, respectively.

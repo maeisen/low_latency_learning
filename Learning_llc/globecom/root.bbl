@@ -1,0 +1,173 @@
+\begin{thebibliography}{10}
+
+\bibitem{zand2012wireless}
+Pouria Zand, Supriyo Chatterjea, Kallol Das, and Paul Havinga,
+\newblock ``Wireless industrial monitoring and control networks: The journey so
+  far and the road ahead,''
+\newblock {\em Journal of sensor and actuator networks}, vol. 1, no. 2, pp.
+  123--152, 2012.
+
+\bibitem{wollschlaeger2017future}
+Martin Wollschlaeger, Thilo Sauter, and Juergen Jasperneite,
+\newblock ``The future of industrial communication: Automation networks in the
+  era of the internet of things and industry 4.0,''
+\newblock {\em IEEE Industrial Electronics Magazine}, vol. 11, no. 1, pp.
+  17--27, 2017.
+
+\bibitem{varghese2014wireless}
+Anitha Varghese and Deepaknath Tandur,
+\newblock ``Wireless requirements and challenges in industry 4.0,''
+\newblock in {\em Contemporary Computing and Informatics (IC3I), 2014
+  International Conference on}. IEEE, 2014, pp. 634--638.
+
+\bibitem{weiner2014design}
+Matthew Weiner, Milos Jorgovanovic, Anant Sahai, and Borivoje Nikoli{\'e},
+\newblock ``Design of a low-latency, high-reliability wireless communication
+  system for control applications,''
+\newblock in {\em Communications (ICC), 2014 IEEE International Conference on}.
+  IEEE, 2014, pp. 3829--3835.
+
+\bibitem{popovski2018wireless}
+Petar Popovski, Jimmy~J Nielsen, Cedomir Stefanovic, Elisabeth de~Carvalho,
+  Erik Strom, Kasper~F Trillingsgaard, Alexandru-Sabin Bana, Dong~Min Kim,
+  Radoslaw Kotaba, Jihong Park, et~al.,
+\newblock ``Wireless access for ultra-reliable low-latency communication:
+  Principles and building blocks,''
+\newblock {\em IEEE Network}, vol. 32, no. 2, pp. 16--23, 2018.
+
+\bibitem{bennis2018ultra}
+Mehdi Bennis, M{\'e}rouane Debbah, and H~Vincent Poor,
+\newblock ``Ultra-reliable and low-latency wireless communication: Tail, risk
+  and scale,''
+\newblock {\em arXiv preprint arXiv:1801.01270}, 2018.
+
+\bibitem{wu2014analysis}
+Chengjie Wu, Mo~Sha, Dolvara Gunatilaka, Abusayeed Saifullah, Chenyang Lu, and
+  Yixin Chen,
+\newblock ``Analysis of edf scheduling for wireless sensor-actuator networks,''
+\newblock in {\em Quality of Service (IWQoS), 2014 IEEE 22nd International
+  Symposium of}. IEEE, 2014, pp. 31--40.
+
+\bibitem{lu1999fair}
+Songwu Lu, Vaduvur Bharghavan, and Rayadurgam Srikant,
+\newblock ``Fair scheduling in wireless packet networks,''
+\newblock {\em IEEE/ACM Transactions on networking}, vol. 7, no. 4, pp.
+  473--489, 1999.
+
+\bibitem{andrews2001providing}
+Matthew Andrews, Krishnan Kumaran, Kavita Ramanan, Alexander Stolyar, Phil
+  Whiting, and Rajiv Vijayakumar,
+\newblock ``Providing quality of service over a shared wireless link,''
+\newblock {\em IEEE Communications magazine}, vol. 39, no. 2, pp. 150--154,
+  2001.
+
+\bibitem{swamy2015cooperative}
+Vasuki~Narasimha Swamy, Sahaana Suri, Paul Rigge, Matthew Weiner, Gireeja
+  Ranade, Anant Sahai, and Borivoje Nikoli{\'c},
+\newblock ``Cooperative communication for high-reliability low-latency wireless
+  control,''
+\newblock in {\em Communications (ICC), 2015 IEEE International Conference on}.
+  IEEE, 2015, pp. 4380--4386.
+
+\bibitem{nielsen2018ultra}
+Jimmy~Jessen Nielsen, Rongkuan Liu, and Petar Popovski,
+\newblock ``Ultra-reliable low latency communication using interface
+  diversity,''
+\newblock {\em IEEE Transactions on Communications}, vol. 66, no. 3, pp.
+  1322--1334, 2018.
+
+\bibitem{ashraf2018dynamic}
+Muhammad~Ikram Ashraf, Chen-Feng Liu, Mehdi Bennis, Walid Saad, and Choong~Seon
+  Hong,
+\newblock ``Dynamic resource allocation for optimized latency and reliability
+  in vehicular networks,''
+\newblock {\em IEEE Access}, vol. 6, pp. 63843--63858, 2018.
+
+\bibitem{Cervin_event_scheduling}
+Anton Cervin and Toivo Henningsson,
+\newblock ``Scheduling of event-triggered controllers on a shared network,''
+\newblock in {\em Proc. of the 47th IEEE Conf. on Dec. and Control (CDC)},
+  2008, pp. 3601--3606.
+
+\bibitem{mamduhi2014event}
+Mohammad~H Mamduhi, Domagoj Toli{\'c}, Adam Molin, and Sandra Hirche,
+\newblock ``Event-triggered scheduling for stochastic multi-loop networked
+  control systems with packet dropouts,''
+\newblock in {\em Decision and Control (CDC), 2014 IEEE 53rd Annual Conference
+  on}. IEEE, 2014, pp. 2776--2782.
+
+\bibitem{shi2011optimal}
+Ling Shi, Peng Cheng, and Jiming Chen,
+\newblock ``Optimal periodic sensor scheduling with limited resources,''
+\newblock {\em IEEE Transactions on Automatic Control}, vol. 56, no. 9, pp.
+  2190--2195, 2011.
+
+\bibitem{han2017optimal}
+Duo Han, Junfeng Wu, Huanshui Zhang, and Ling Shi,
+\newblock ``Optimal sensor scheduling for multiple linear dynamical systems,''
+\newblock {\em Automatica}, vol. 75, pp. 260--270, 2017.
+
+\bibitem{GatsisEtal15}
+Konstantinos Gatsis, Miroslav Pajic, Alejandro Ribeiro, and George~J. Pappas,
+\newblock ``Opportunistic control over shared wireless channels,''
+\newblock {\em IEEE Transactions on Automatic Control}, vol. 60, no. 12, pp.
+  3140--3155, December 2015.
+
+\bibitem{demirel2018deepcas}
+Burak Demirel, Arunselvan Ramaswamy, Daniel~E Quevedo, and Holger Karl,
+\newblock ``Deepcas: A deep reinforcement learning algorithm for control-aware
+  scheduling,''
+\newblock {\em IEEE Control Systems Letters}, vol. 2, no. 4, pp. 737--742,
+  2018.
+
+\bibitem{leong2018deep}
+Alex~S Leong, Arunselvan Ramaswamy, Daniel~E Quevedo, Holger Karl, and Ling
+  Shi,
+\newblock ``Deep reinforcement learning for wireless sensor scheduling in
+  cyber-physical systems,''
+\newblock {\em arXiv preprint arXiv:1809.05149}, 2018.
+
+\bibitem{eisen2018control}
+Mark Eisen, Mohammad~M Rashid, Konstantinos Gatsis, Dave Cavalcanti, Nageen
+  Himayat, and Alejandro Ribeiro,
+\newblock ``Control aware radio resource allocation in low latency wireless
+  control systems,''
+\newblock {\em arXiv preprint arXiv:1811.00409}, 2018.
+
+\bibitem{eisen2018learninga}
+Mark Eisen, Clark Zhang, Luiz~FO Chamon, Daniel~D Lee, and Alejandro Ribeiro,
+\newblock ``Learning optimal resource allocations in wireless systems,''
+\newblock {\em arXiv preprint arXiv:1807.08088}, 2018.
+
+\bibitem{sesia2011lte}
+Stefania Sesia, Matthew Baker, and Issam Toufik,
+\newblock {\em LTE-the UMTS long term evolution: from theory to practice},
+\newblock John Wiley \& Sons, 2011.
+
+\bibitem{agiwal2016next}
+Mamta Agiwal, Abhishek Roy, and Navrati Saxena,
+\newblock ``Next generation 5g wireless networks: A comprehensive survey,''
+\newblock {\em IEEE Communications Surveys \& Tutorials}, vol. 18, no. 3, pp.
+  1617--1655, 2016.
+
+\bibitem{liu2014ieee}
+Jianhan Liu, R~Porat, N~Jindal, et~al.,
+\newblock ``Ieee 802.11 ax channel model document,''
+\newblock {\em Wireless LANs, Rep. IEEE 802.11--14/0882r3}, 2014.
+
+\bibitem{sutton2000policy}
+Richard~S Sutton, David~A McAllester, Satinder~P Singh, and Yishay Mansour,
+\newblock ``Policy gradient methods for reinforcement learning with function
+  approximation,''
+\newblock in {\em Advances in neural information processing systems}, 2000, pp.
+  1057--1063.
+
+\bibitem{ashraf2016ultra}
+Shehzad~A Ashraf, Ismet Aktas, Erik Eriksson, Ke~Wang Helmersson, and Junaid
+  Ansari,
+\newblock ``Ultra-reliable and low-latency communication for wireless factory
+  automation: From {LTE} to {5G},''
+\newblock in {\em Emerging Technologies and Factory Automation (ETFA), 2016
+  IEEE 21st International Conference on}. IEEE, 2016, pp. 1--8.
+
+\end{thebibliography}
