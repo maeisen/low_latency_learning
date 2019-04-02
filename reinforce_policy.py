@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 import math
 import scipy
 import scipy.stats
@@ -89,81 +90,28 @@ class ProbabilityAction(object):
         raise Exception("Not Implemented")
 
 
-class GammaDistribution2(ProbabilityAction):
-    """
-    Gamma Distribution with fixed alpha=2
-    """
-    def __init__(self, action_dim, lower_bound, upper_bound):
-        self.alpha = 2
-        super().__init__(1, action_dim)
-
-    def log_prob(self, params, selected_action):
-        beta = tf.nn.sigmoid(params) * 4
-
-        log_probs = self.alpha * tf.log(beta) + \
-                (self.alpha - 1) * tf.log(selected_action) - \
-                beta * selected_action - \
-                np.log(scipy.special.gamma(self.alpha))
-        log_probs = tf.reduce_sum(log_probs, axis=1)
-
-        return log_probs, beta
-
-    def get_action(self, params):
-        # params is beta
-        action = np.random.gamma(shape=self.alpha, scale=1.0/params)
-        return action
-
-
-class GaussianDistribution(ProbabilityAction):
-    #TODO: FIX THIS
-    def __init__(self, action_dim, lower_bound, upper_bound):
-        super().__init__(2, action_dim)
-
-    def log_prob(self, params, selected_action):
-        mean = tf.gather(params, np.array(range(self.action_dim)), axis=1, name='mean')
-        var = tf.gather(params, np.array(range(self.action_dim, 2*self.action_dim)), axis=1, name='var')
-
-        mean = tf.nn.sigmoid(mean) * 10
-        var = tf.nn.sigmoid(var) * 1
-        output = None
-
-        # TODO: this can create NaNs when self.var is small
-        log_probs = -0.5 * tf.log(2*np.pi*var) - tf.square(selected_action - mean) / (2. * var)
-        log_probs = tf.reduce_sum(log_probs, axis=1)
-
-        return log_probs, outputex
-
-    def get_action(self, params):
-        mean = params[:, :action_dim]
-        var = params[:, action_dim:]
-
-        print("mean: " + str(mean))
-        print("var: " + str(var))
-
-        action = np.random.normal(mean, var) # TODO: this is not actually var, its std
-        # # restrict actions to be at least some small positive value
-        # action[action < 0.05] = 0.05
-        return action
-
-class ClassificationDistribution(ProbabilityAction):
+#####################################################
+########## Categorical ###########################
+######################################################
+class CategoricalDistribution(ProbabilityAction):
     #TODO: FIX THIS
     def __init__(self, action_dim, num_classes):
         super().__init__(num_classes, action_dim)
 
     def log_prob(self, params, selected_action):
         log_probs = 0
-        output_list = []
-        output = tf.zeros((tf.shape(params)[0],1))
-        #print(params)
+        output = tf.zeros((tf.shape(params)[0],self.action_dim*self.num_param))
+
         for i in np.arange(self.action_dim):
             ru_class = tf.gather(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
-            ru_class_sig = 1 / (1 + tf.math.exp(-ru_class))
-            log_probs = log_probs + tf.reduce_sum(tf.log(ru_class_sig)*(selected_action[i]==i),axis=1)
-            output = tf.concat([output, ru_class_sig],axis=1)
-            #output_list.append(ru_class_sig)
-        #print(tf.stack(output_list).shape)
+            ru_class = tf.nn.softmax(ru_class, axis=1)
+            probs = tf.matrix_diag(ru_class[:,selected_action[:,i]])
+            log_probs = log_probs + tf.reduce_sum(tf.log(probs),axis=1)
+            output[:, np.array(range(i*self.num_param, (i+1)*self.num_param)) ] = ru_class
 
-        return log_probs, output[:,1:]
+        return log_probs, output
+
+
 
     def get_action(self, params):
         output_list = []
@@ -172,49 +120,175 @@ class ClassificationDistribution(ProbabilityAction):
         action = np.zeros((N,self.action_dim))
         for i in np.arange(self.action_dim):
             ru_class = np.take(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
-            ru_class_sig = 1 / (1 + np.exp(-ru_class))
             for j in np.arange(N):
-                action[j,i] = np.where(np.random.multinomial(1,ru_class_sig[j,:]/np.sum(ru_class_sig[j,:])))[0][0]
+                action[j,i] = np.where(np.random.multinomial(1,))[0][0]
                 #action[j,i] = np.argmax(ru_class_sig[j,:])
 
-            
-        #action = np.stack(output_list)
         return action
 
-class ClassificationDistribution2(ProbabilityAction):
-    #TODO: FIX THIS
-    def __init__(self, action_dim, num_classes):
-        super().__init__(num_classes, action_dim)
+
+#####################################################
+########## Truncated Gaussian #######################
+######################################################
+class TruncatedGaussianDistribution(ProbabilityAction):
+    def __init__(self, action_dim, lower_bound, upper_bound):
+        super(TruncatedGaussianDistribution,self).__init__(2*action_dim, action_dim)
+        self.lower_bound = float(lower_bound)
+        self.upper_bound = float(upper_bound)
 
     def log_prob(self, params, selected_action):
-        log_probs = 0
-        output_list = []
-        output = tf.zeros((tf.shape(params)[0],1))
-        #print(params)
-        for i in np.arange(self.action_dim):
-            ru_class = tf.gather(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
-            ru_class_sig = 1 / (1 + tf.math.exp(-ru_class))
-            log_probs = log_probs + tf.reduce_sum(tf.log(ru_class_sig)*(selected_action[i]==i),axis=1)
-            output = tf.concat([output, ru_class_sig],axis=1)
-            #output_list.append(ru_class_sig)
-        #print(tf.stack(output_list).shape)
+        pt1 = int(self.action_dim)
+        pt2 = int(self.action_dim*2)
 
-        return log_probs, output[:,1:]
+        mean = tf.gather(params, np.array(range(pt1)), axis=1, name='mean')
+        std = tf.gather(params, np.array(range(pt1,pt2)), axis=1, name='std')
+        mean = tf.nn.sigmoid(mean) * (self.upper_bound - self.lower_bound) + self.lower_bound
+        std = tf.nn.sigmoid(std) * (.5-.01) + 0.01
+
+        output = tf.concat([mean, std], axis=1) 
+       # output = mean
+
+        dist = tf.distributions.Normal(mean, std)
+        log_probs = dist.log_prob(selected_action) - tf.log((dist.cdf(self.upper_bound) - dist.cdf(self.lower_bound))) - tf.log(std)
+
+        log_probs = tf.reduce_sum(log_probs, axis=1)
+
+        return log_probs, output
 
     def get_action(self, params):
-        output_list = []
-        N = np.shape(params)[0]
+        pt1 = int(self.action_dim)
+        pt2 = int(self.action_dim*2)
 
-        action = np.zeros((N,self.action_dim))
-        for i in np.arange(self.action_dim):
-            ru_class = np.take(params, np.array(range(i*self.num_param, (i+1)*self.num_param)), axis=1)
-            ru_class_sig = 1 / (1 + np.exp(-ru_class))
-            for j in np.arange(N):
-                #action[j,i] = np.where(np.random.multinomial(1,ru_class_sig[j,:]/np.sum(ru_class_sig[j,:])))[0][0]
-                action[j,i] = np.argmax(ru_class_sig[j,:])
+        mean = params[:, :pt1]
+        std = params[:,pt1:pt2]
 
-            
-        #action = np.stack(output_list)
+        N = params.shape[0]
+        lower_bound = (np.vstack([self.lower_bound for _ in range(N)]) - mean) / std
+        upper_bound = (np.vstack([self.upper_bound for _ in range(N)]) - mean) / std
+
+        rate_action = scipy.stats.truncnorm.rvs(lower_bound, upper_bound, loc=mean, scale=std)
+
+        return rate_action
+
+    def random_action(self, N):
+        mean = (self.upper_bound+self.lower_bound)/2
+        std = 0.5
+
+        rate_action = scipy.stats.truncnorm.rvs(self.lower_bound, self.upper_bound, loc=mean, scale=std, size=(N,self.action_dim))
+
+        return rate_action
+
+    def get_action2(self, params):
+        pt1 = int(self.action_dim)
+        pt2 = int(self.action_dim*2)
+
+        mean = params[:, :pt1]
+
+        rate_action = mean
+        return rate_action
+
+#####################################################
+########## Bernoulli  ###############################
+######################################################
+class BernoulliDistribution(ProbabilityAction):
+    def __init__(self, action_dim, num_classes):
+        super(BernoulliDistribution,self).__init__(action_dim, action_dim)
+
+    def log_prob(self, params, selected_action):
+
+        p = tf.nn.sigmoid(params)*(.99-.01) + .01
+
+        transmit_action = selected_action
+
+        output = p
+
+        log_probs2 = (transmit_action) * tf.log(p) + (1.0 - transmit_action)*tf.log(1-p)
+        log_probs = tf.reduce_sum(log_probs2, axis=1)
+
+        return log_probs, output
+
+    def get_action(self, params):
+        action = np.random.binomial(1,params)
+        return action
+
+    def random_action(self,N):
+        action = np.random.binomial(1,0.3,size=(N,self.action_dim))
+        return action
+
+    def get_action2(self, params):
+        action = (params>= 0.5).astype(float)
+        return action
+
+#####################################################
+########## Gaussian/Bernoulli  ###############################
+######################################################
+class GaussianBernoulliDistribution(ProbabilityAction):
+    def __init__(self, num_users, lower_bound, upper_bound, num_classes):
+        super(GaussianBernoulliDistribution,self).__init__((num_classes+2)*num_users, (num_classes+1)*num_users)
+        self.gaussian = TruncatedGaussianDistribution(num_users,lower_bound,upper_bound)
+        self.bernoulli = BernoulliDistribution(num_users*num_classes, num_classes)
+        self.num_users = num_users
+        self.num_classes = num_classes
+
+    def log_prob(self, params, selected_action):
+
+        pt1 = int(2*self.num_users)
+        pt2 = int((2+self.num_classes)*self.num_users)
+
+        gaussian_p = tf.gather(params, np.array(range(pt1)), axis=1, name='gp')
+        bernoulli_p = tf.gather(params, np.array(range(pt1, pt2)), axis=1, name='bp')
+
+        pt1 = int(self.num_users)
+        pt2 = int((1+self.num_classes)*self.num_users)
+
+        rate_action = tf.gather(selected_action, np.array(range(pt1)), axis=1, name='rate')
+        transmit_action = tf.gather(selected_action, np.array(range(pt1,pt2)), axis=1, name='transmit')
+
+        log_probs1, output1 = self.gaussian.log_prob(gaussian_p,rate_action)
+        log_probs2, output2 = self.bernoulli.log_prob(bernoulli_p,transmit_action)
+
+        output = tf.concat([output1, output2], axis=1)
+
+        log_probs = log_probs1 + log_probs2
+
+        return log_probs, output
+
+    def get_action(self, params):
+        pt1 = int(2*self.num_users)
+        pt2 = int((2+self.num_classes)*self.num_users)
+
+        gaussian_p = params[:,:pt1]
+        bernoulli_p = params[:,pt1:pt2]
+
+        action1 = self.gaussian.get_action(gaussian_p)
+        action2 = self.bernoulli.get_action(bernoulli_p)
+
+        action = np.concatenate([action1, action2], axis=1)
+
+        return action
+
+    def random_action(self,N):
+
+        action1 = self.gaussian.random_action(N)
+        action2 = self.bernoulli.random_action(N)
+
+        action = np.concatenate([action1, action2], axis=1)
+
+        return action
+
+
+    def get_action2(self, params):
+        pt1 = int(2*self.num_users)
+        pt2 = int((2+self.num_classes)*self.num_users)
+
+        gaussian_p = params[:,:pt1]
+        bernoulli_p = params[:,pt1:pt2]
+
+        action1 = self.gaussian.get_action2(gaussian_p)
+        action2 = self.bernoulli.get_action2(bernoulli_p)
+
+        action = np.concatenate([action1, action2], axis=1)
+
         return action
 
 class TruncatedGaussianBernoulliDistribution(ProbabilityAction):
@@ -248,9 +322,8 @@ class TruncatedGaussianBernoulliDistribution(ProbabilityAction):
         log_probs2 = tf.reduce_sum(log_probs2, axis=1)
 
         
-
         dist = tf.distributions.Normal(mean, std)
-        log_probs = dist.log_prob(rate_action) - tf.log((dist.cdf(self.upper_bound) - dist.cdf(self.lower_bound)))
+        log_probs = dist.log_prob(rate_action) - tf.log((dist.cdf(self.upper_bound) - dist.cdf(self.lower_bound))) - tf.log(std)
 
         log_probs = tf.reduce_sum(log_probs, axis=1) + log_probs2
 
@@ -265,30 +338,12 @@ class TruncatedGaussianBernoulliDistribution(ProbabilityAction):
         std = params[:, pt1:pt2]
         alpha = params[:,pt2:pt3]
 
-        if np.sum(np.isnan(alpha)) > 0:
-            pdb.set_trace()
-
-
-        N = params.shape[0]
-
         lower_bound = (np.vstack([self.lower_bound for _ in range(N)]) - mean) / std
         upper_bound = (np.vstack([self.upper_bound for _ in range(N)]) - mean) / std
-
-       # lower_bound = (np.vstack([self.lower_bound for _ in range(N)]))
-       # upper_bound = (np.vstack([self.upper_bound for _ in range(N)]))
         rate_action = scipy.stats.truncnorm.rvs(lower_bound, upper_bound, loc=mean, scale=std)
-       # rate_action = mean
-
-       # transmit_action = (alpha > 0.5)
-       # transmit_action = transmit_action.astype(float)
-
         transmit_action = np.random.binomial(1,alpha)
 
         action = np.concatenate([rate_action, transmit_action], axis=1)
-
-        #dist = scipy.stats.truncnorm(lower_bound, upper_bound, loc=mean, scale=std)
-        #action = dist.rvs()
-
         return action
 
 
@@ -302,17 +357,9 @@ class TruncatedGaussianBernoulliDistribution(ProbabilityAction):
         alpha = params[:,pt2:pt3]
 
         rate_action = mean
-
-       # transmit_action = (alpha > 0.5)
-       # transmit_action = transmit_action.astype(float)
-
         transmit_action = np.random.binomial(1,alpha)
 
         action = np.concatenate([rate_action, transmit_action], axis=1)
-
-        #dist = scipy.stats.truncnorm(lower_bound, upper_bound, loc=mean, scale=std)
-        #action = dist.rvs()
-
         return action
 
 
@@ -338,72 +385,131 @@ def mlp_model(state_dim, action_dim, num_param):
     return state_input, output
 
 
-def mlp_model2(state_dim, action_dim, num_param, layers=[128, 64, 32]):
+def mlp_model2(state_dim, action_dim, num_param, layers=[512, 256, 128, 64, 32], model=None):
     with tf.variable_scope('policy'):
 
         state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
+        is_train = tf.placeholder(tf.bool, name="is_train")
 
         net = state_input
         for idx, layer in enumerate(layers):
             net = tf.contrib.layers.fully_connected(net,
                 layer,
                 activation_fn=tf.nn.relu,
+                weights_initializer = tf.contrib.layers.variance_scaling_initializer(),
                 scope='layer'+str(idx))
 
+
+        output = tf.contrib.layers.fully_connected(net,
+            int(num_param),
+            activation_fn=None,
+            scope='output')
+        output = tf.layers.batch_normalization(output, training=is_train)
+
+    return state_input, is_train, output
+
+def mlp_model2_init(state_dim, action_dim, num_param, layers=[128, 64, 32], model=None):
+    with tf.variable_scope('policy'):
+
+        state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
+
+        net = state_input
+        for idx, layer in enumerate(layers):
+            L = model.get_layer('dense' + idx*('_' + str(idx)))
+            P = L.get_weights()
+            net = tf.contrib.layers.fully_connected(net,
+                layer,
+                activation_fn=tf.nn.relu,
+                weights_initializer = tf.initializers.constant(P[0]),
+                biases_initializer = tf.initializers.constant(P[1]),
+                scope='layer'+str(idx))
+
+        L = model.get_layer('dense_2')
+        P = L.get_weights()
         output = tf.contrib.layers.fully_connected(net,
             int(action_dim*num_param),
             activation_fn=None,
+            weights_initializer = tf.initializers.constant(P[0]),
+            biases_initializer = tf.initializers.constant(P[1]),
             scope='output')
 
     return state_input, output
 
-def mlp_model_multi2(state_dim, action_dim, num_param, layers=[32, 16]):
-    def _build_network(input, num_param, scope, layers):
+
+def mlp_model_multi2(state_dim, action_dim, num_param, layers=[128, 64, 32], model=None, num_users=20, num_classes=5):
+    def _build_network(input, is_train, num_param, scope, layers):
         with tf.variable_scope(scope):
             net = input
             for idx, layer in enumerate(layers):
                 net = tf.contrib.layers.fully_connected(net,
                     layer,
                     activation_fn = tf.nn.relu,
+                    weights_initializer = tf.contrib.layers.variance_scaling_initializer(),
                     scope='layer'+str(idx))
 
             output = tf.contrib.layers.fully_connected(net,
                 num_param,
                 activation_fn=None,
                 scope='output')
+            output = tf.layers.batch_normalization(output, training=is_train)
+
+        return output
+
+    def _build_network_init(input, is_train, num_param, scope, layers, model):
+        with tf.variable_scope(scope):
+            net = input
+            for idx, layer in enumerate(layers):
+                L = model.get_layer('dense' + idx*('_' + str(idx)))
+                P = L.get_weights()
+                net = tf.contrib.layers.fully_connected(net,
+                    layer,
+                    activation_fn=tf.nn.relu,
+                    weights_initializer = tf.initializers.constant(P[0]),
+                    biases_initializer = tf.initializers.constant(P[1]),
+                    scope='layer'+str(idx))
+
+            L = model.get_layer('dense_2')
+            P = L.get_weights()
+            output = tf.contrib.layers.fully_connected(net,
+                num_param,
+                activation_fn=None,
+                weights_initializer = tf.initializers.constant(P[0]),
+                biases_initializer = tf.initializers.constant(P[1]),
+                scope='output')
+            output = tf.layers.batch_normalization(output, training=is_train)
         return output
 
     state_input = tf.placeholder(tf.float32, [None, state_dim], name='state_input')
-    param_multiplier = [1, 0.5]
+    is_train = tf.placeholder(tf.bool, name="is_train")
     output_list = []
-    for i in range(2):
-       # single_input = tf.slice(state_input, [0, i], [-1, 1])
 
-        output = _build_network(state_input, int(action_dim*param_multiplier[i]), "agent" + str(i), layers)
-        output_list.append(output[..., tf.newaxis])
+    output = _build_network_init(state_input, is_train, 2*num_users, "rate_policy", layers, model[1])
+    output_list.append(output[..., tf.newaxis])
+
+    output = _build_network_init(state_input, is_train, num_classes*num_users, "transmit_policy", layers, model[0])
+    output_list.append(output[..., tf.newaxis])
 
     output_list = tf.concat(output_list, axis=1)
     output_list = tf.reshape(output_list, [tf.shape(output)[0], -1])
 
-    return state_input, output_list
+    return state_input, is_train, output_list
 
 
 
 class ReinforcePolicy(object):
     def __init__(self,
-        state_dim,
-        action_dim,
-        constraint_dim,
+        sys,
         model_builder=mlp_model,
         distribution=None,
         theta_lr = 5e-4,
         lambda_lr = 0.005,
-        sess=None):
+        sess=None,
+        model=None):
 
-        self.state_dim = state_dim
-        self.action_dim = action_dim
-        self.constraint_dim = constraint_dim
-        self.lambd = 10*np.ones((constraint_dim, 1))
+        self.state_dim = sys.state_dim
+        self.action_dim = sys.action_dim
+        self.constraint_dim = sys.constraint_dim
+        self.lambd = 10*np.ones((sys.constraint_dim, 1))
 
         self.model_builder = model_builder
         self.dist = distribution
@@ -413,7 +519,7 @@ class ReinforcePolicy(object):
 
         self.stats = RunningStats(64*100)
 
-        self._build_model(state_dim, action_dim, model_builder, distribution)
+        self._build_model(sys.state_dim, sys.action_dim, model_builder, distribution,model)
 
         if sess == None:
             config = tf.ConfigProto(device_count={'GPU': 0})
@@ -423,12 +529,14 @@ class ReinforcePolicy(object):
             self.sess = sess
 
 
-    def _build_model(self, state_dim, action_dim, model_builder, distribution):
 
-        # self.state_input, self.output, self.selected_action, self.log_probs =\
-        #     model_builder(state_dim, action_dim, self.dist)
+    def _build_model(self, state_dim, action_dim, model_builder, distribution, model):
 
-        self.state_input, self.output = model_builder(state_dim, action_dim, self.dist.num_param)
+        self.state_input, self.is_train, self.output = model_builder(state_dim, action_dim, self.dist.num_param, model=model)
+
+
+        tvars = tf.trainable_variables()
+        self.g_vars = [var for var in tvars if 'policy/' in var.name or 'rate_policy/' in var.name or 'transmit_policy/' in var.name]
 
         self.selected_action = tf.placeholder(tf.float32, [None, action_dim], name='selected_action')
 
@@ -441,17 +549,50 @@ class ReinforcePolicy(object):
         self.loss = tf.reduce_mean(self.loss)
 
         lr = self.theta_lr
-        self.optimize = tf.train.AdamOptimizer(lr).minimize(self.loss)
+     #   self.gradients = tf.train.AdamOptimizer(lr).compute_gradients(self.loss)
+
+        update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+        with tf.control_dependencies(update_ops):
+             self.optimize = tf.train.AdamOptimizer(lr).minimize(self.loss, var_list=self.g_vars)
 
 
 
-    def get_action(self, inputs):
-        fd = {self.state_input: inputs}
+    def get_action(self, inputs, pause=False, training=True):
+        fd = {self.state_input: inputs, self.is_train: training}
+        if pause:
+            ppp = self.sess.run(self.output, feed_dict=fd)
+            pdb.set_trace()
+        
         params = self.sess.run(self.params, feed_dict=fd)
         if np.sum(np.isnan(params)) > 0:
             pdb.set_trace()
 
         action = self.dist.get_action(params)
+
+        action = np.expand_dims(action, axis=2)
+        inputs = np.expand_dims(inputs, axis=2)
+
+        return inputs, action
+
+    def get_action2(self, inputs, training=False):
+        fd = {self.state_input: inputs, self.is_train: training}
+        
+        params = self.sess.run(self.params, feed_dict=fd)
+
+
+        action = self.dist.get_action2(params)
+
+        action = np.expand_dims(action, axis=2)
+        inputs = np.expand_dims(inputs, axis=2)
+
+        return inputs, action
+
+    def random_action(self, inputs, pause=False):
+        N = inputs.shape[0]
+        action = self.dist.random_action(N)
+
+        action = np.expand_dims(action, axis=2)
+        inputs = np.expand_dims(inputs, axis=2)
 
         return inputs, action
 
@@ -476,9 +617,18 @@ class ReinforcePolicy(object):
         # policy gradient step
         fd = {self.state_input: inputs,
               self.selected_action: actions,
+              self.is_train: True,
               self.cost: cost_minus_baseline}
+        grads = 0
+
+
+     #   gradients = self.sess.run(self.gradients,feed_dict=fd)
+     #   grads = np.zeros(len(gradients))
+     #   for i in np.arange(len(gradients)):
+     #       grads[i] = np.linalg.norm(gradients[i][0])
 
         output = self.sess.run(self.output, feed_dict=fd)
+
         loss, _ = self.sess.run([self.loss, self.optimize], feed_dict=fd)
 
 
@@ -494,7 +644,7 @@ class ReinforcePolicy(object):
         self.lambd_lr *= 0.99997
 
         # TODO: learning rate decrease on lambd
-        return loss
+        return cost, grads
 
 
 
